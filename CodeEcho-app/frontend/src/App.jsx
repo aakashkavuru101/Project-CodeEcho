@@ -138,7 +138,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <Header />
       <main className="container mx-auto px-4 py-6 md:py-8">
         {/* Enhanced Header */}
@@ -148,13 +148,13 @@ function AppContent() {
               <Globe className="h-10 w-10 md:h-12 md:w-12 text-blue-600 mr-3" />
               <Sparkles className="h-4 w-4 text-yellow-500 absolute -top-1 -right-1 animate-pulse" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">{t('title')}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
           </div>
           <div className="max-w-3xl mx-auto space-y-2">
-            <p className="text-lg md:text-xl text-muted-foreground">
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300">
               {t('subtitle')}
             </p>
-            <p className="text-sm md:text-base text-muted-foreground">
+            <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">
               {t('secureSubtitle')}
             </p>
           </div>

@@ -11,18 +11,18 @@ export default function Header() {
   const t = useTranslation(language)
 
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="border-b bg-white dark:bg-gray-900 backdrop-blur">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center space-x-2">
-          <h1 className="text-xl font-bold text-primary">{t('title')}</h1>
+          <h1 className="text-xl font-bold text-blue-600">{t('title')}</h1>
         </div>
 
         {/* Controls */}
         <div className="flex items-center space-x-4">
           {/* Language Toggle */}
           <div className="flex items-center space-x-2">
-            <Languages className="h-4 w-4 text-muted-foreground" />
+            <Languages className="h-4 w-4 text-gray-500" />
             <Button
               variant="ghost"
               size="sm"
@@ -35,13 +35,13 @@ export default function Header() {
 
           {/* Theme Toggle */}
           <div className="flex items-center space-x-2">
-            <Sun className="h-4 w-4 text-muted-foreground" />
+            <Sun className="h-4 w-4 text-gray-500" />
             <Switch
               checked={theme === 'dark'}
               onCheckedChange={toggleTheme}
               aria-label="Toggle theme"
             />
-            <Moon className="h-4 w-4 text-muted-foreground" />
+            <Moon className="h-4 w-4 text-gray-500" />
           </div>
 
           {/* GitHub Link */}

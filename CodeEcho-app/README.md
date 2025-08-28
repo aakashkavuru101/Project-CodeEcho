@@ -1,32 +1,58 @@
-# Website Reverse Engineer - AI-Powered Prompt Generator
+# CodeEcho - AI-Powered Website Reverse Engineer
 
-An intelligent web application that analyzes any website and generates comprehensive prompts for recreating similar applications using AI tools.
+![CodeEcho Application](https://github.com/user-attachments/assets/f5869214-bcd9-4365-9506-1b4f35714d5f)
 
-## Features
+An intelligent web application that analyzes any website and generates comprehensive prompts for recreating similar applications using AI tools. **Now production-ready with free deployment options!**
 
-- **Website Analysis**: Scrapes and analyzes website content, design, and functionality
-- **AI-Powered Prompt Generation**: Creates detailed prompts for recreating websites
-- **Multiple Output Formats**: Provides both human-readable text and structured JSON formats
-- **Comprehensive Analysis**: Covers design, functionality, technical implementation, content strategy, and UX
-- **Downloadable Results**: Packages analysis results in a convenient ZIP file
-- **Modern UI**: Clean, responsive interface built with React and Tailwind CSS
+## 🎯 Key Features
 
-## What You Get
+- **🔍 Smart Website Analysis**: Scrapes and analyzes website content, design, and functionality with fallback support
+- **🤖 AI-Powered Prompt Generation**: Creates detailed prompts using Google Gemini API
+- **📊 Multiple Output Formats**: Provides both human-readable text and structured JSON formats
+- **📱 Responsive Modern UI**: Clean, mobile-friendly interface built with React and Tailwind CSS
+- **⚡ Production Ready**: Optimized for deployment on free hosting platforms
+- **🛡️ Robust Error Handling**: Works even when advanced browser automation fails
 
-- **Design Analysis**: Color palettes, typography, layout patterns
-- **Functionality Breakdown**: Features, interactions, user flows
-- **Technical Recommendations**: Implementation strategies and best practices
-- **Content Strategy**: Guidelines for content creation and organization
-- **UX Guidelines**: User experience principles and accessibility considerations
-- **Ready-to-use Prompts**: Formatted for use with various AI tools
+## 🌟 What You Get
 
-## Technology Stack
+- **🎨 Design Analysis**: Color palettes, typography, layout patterns
+- **⚙️ Functionality Breakdown**: Features, interactions, user flows
+- **🔧 Technical Recommendations**: Implementation strategies and best practices
+- **📝 Content Strategy**: Guidelines for content creation and organization
+- **👥 UX Guidelines**: User experience principles and accessibility considerations
+- **🎯 Ready-to-use Prompts**: Formatted for use with ChatGPT, Claude, and other AI tools
+
+## 🚀 Quick Deploy (Free Options)
+
+### Railway (Recommended)
+1. Fork this repository
+2. Connect to [Railway](https://railway.app)
+3. Set `GEMINI_API_KEY` environment variable
+4. Deploy automatically
+
+### Render
+1. Fork this repository  
+2. Connect to [Render](https://render.com)
+3. Use `deploy.sh` as build command
+4. Set environment variables
+
+### Heroku
+```bash
+heroku create your-app-name
+heroku config:set GEMINI_API_KEY=your-key-here
+git push heroku main
+```
+
+## 🔑 Get Your API Key
+Visit [Google AI Studio](https://makersuite.google.com/app/apikey) to get your free Gemini API key.
+
+## 💻 Technology Stack
 
 ### Backend
-- **Flask**: Python web framework
-- **Playwright**: Web scraping and browser automation
+- **Flask**: Python web framework with production configuration
 - **Google Gemini API**: AI-powered prompt generation
-- **BeautifulSoup**: HTML parsing and analysis
+- **BeautifulSoup + Requests**: Reliable web scraping with Playwright fallback
+- **Robust Error Handling**: Works in any deployment environment
 
 ### Frontend
 - **React**: Modern JavaScript framework

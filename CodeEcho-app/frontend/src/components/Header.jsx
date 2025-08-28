@@ -11,23 +11,24 @@ export default function Header() {
   const t = useTranslation(language)
 
   return (
-    <header className="border-b bg-white dark:bg-gray-900 backdrop-blur">
+    <header className="border-b bg-white dark:bg-gray-900 backdrop-blur" role="banner">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center space-x-2">
-          <h1 className="text-xl font-bold text-blue-600">{t('title')}</h1>
+          <h1 className="text-xl font-bold text-blue-600" aria-label="CodeEcho - AI-powered website analysis">{t('title')}</h1>
         </div>
 
         {/* Controls */}
-        <div className="flex items-center space-x-4">
+        <nav className="flex items-center space-x-4" role="navigation" aria-label="Header controls">
           {/* Language Toggle */}
           <div className="flex items-center space-x-2">
-            <Languages className="h-4 w-4 text-gray-500" />
+            <Languages className="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleLanguage}
-              className="text-sm font-medium"
+              className="text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+              aria-label={`Switch to ${language === 'en' ? 'Japanese' : 'English'} language`}
             >
               {language === 'en' ? '日本語' : 'English'}
             </Button>
@@ -35,13 +36,14 @@ export default function Header() {
 
           {/* Theme Toggle */}
           <div className="flex items-center space-x-2">
-            <Sun className="h-4 w-4 text-gray-500" />
+            <Sun className="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
             <Switch
               checked={theme === 'dark'}
               onCheckedChange={toggleTheme}
-              aria-label="Toggle theme"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+              className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
             />
-            <Moon className="h-4 w-4 text-gray-500" />
+            <Moon className="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
           </div>
 
           {/* GitHub Link */}
@@ -54,13 +56,14 @@ export default function Header() {
               href="https://github.com/aakashkavuru101/Project-CodeEcho"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+              aria-label="View CodeEcho source code on GitHub (opens in new tab)"
             >
-              <Github className="h-4 w-4" />
+              <Github className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">GitHub</span>
             </a>
           </Button>
-        </div>
+        </nav>
       </div>
     </header>
   )

@@ -579,89 +579,315 @@ class PromptGenerator:
 4. Progressive Enhancement: Start with basic functionality, add advanced features"""
     
     def _fallback_technical_prompt(self, technical_analysis: Dict[str, Any]) -> str:
-        """Fallback technical prompt when AI generation fails."""
+        """Enhanced fallback technical prompt using comprehensive analysis data."""
         frontend_tech = technical_analysis.get('frontend_technologies', [])
         modern_features = technical_analysis.get('modern_features', [])
+        frameworks = technical_analysis.get('frameworks_detected', {})
+        performance = technical_analysis.get('performance_metrics', {})
+        architecture = technical_analysis.get('architecture_patterns', [])
+        security = technical_analysis.get('security_features', {})
         
-        return f"""Technical Implementation Requirements:
+        # Build specific recommendations based on detected technologies
+        framework_rec = ""
+        if frameworks.get('primary_framework') != 'vanilla':
+            framework_rec = f"\n**Primary Framework**: {frameworks.get('primary_framework', 'React/Vue/Angular')}"
+            if frameworks.get('ecosystem'):
+                framework_rec += f"\n**Ecosystem**: {frameworks.get('ecosystem')} with associated tooling"
+        
+        architecture_rec = ""
+        if architecture:
+            arch_patterns = ', '.join(architecture)
+            architecture_rec = f"\n**Architecture**: Implement {arch_patterns} patterns"
+        
+        return f"""## Technical Implementation Requirements
 
-Frontend Technologies:
-{chr(10).join(f'- {tech}' for tech in frontend_tech) if frontend_tech else '- HTML5, CSS3, JavaScript'}
+**Technology Stack Recommendations:**
+{chr(10).join(f'- {tech}' for tech in frontend_tech) if frontend_tech else '- HTML5, CSS3, Vanilla JavaScript'}
+{framework_rec}
 
-Modern Features:
-{chr(10).join(f'- {feature}' for feature in modern_features) if modern_features else '- Responsive design, Progressive enhancement'}
+**Modern Web Features:**
+{chr(10).join(f'- {feature.replace("_", " ").title()}' for feature in modern_features) if modern_features else '- Responsive Design\n- Progressive Enhancement\n- Semantic HTML'}
 
-Performance:
-- Optimize for fast loading times
-- Implement responsive design
-- Ensure cross-browser compatibility
-- Follow web standards and best practices"""
+**Performance Requirements:**
+- Target load time: {performance.get('load_time', 3)} seconds or less
+- Implement {performance.get('optimization_level', 'standard')} optimization level
+- Use {technical_analysis.get('optimization_patterns', {}).get('caching_strategy', 'browser caching')}
+- Asset optimization: {'enabled' if technical_analysis.get('optimization_patterns', {}).get('asset_optimization') else 'implement compression and minification'}
+
+**Security Implementation:**
+- HTTPS enforcement: {'implemented' if security.get('https_usage') else 'required'}
+- Content Security Policy: {'detected' if security.get('csp_headers') else 'implement'}
+- XSS protection: {'active' if security.get('xss_protection') else 'required'}
+
+**Browser Support Strategy:**
+- Target: {technical_analysis.get('browser_support', {}).get('modern_browsers', 'Modern browsers (last 2 versions)')}
+- Polyfills: {'included' if technical_analysis.get('browser_support', {}).get('polyfill_usage') else 'add as needed'}
+- Progressive enhancement: {'implemented' if technical_analysis.get('browser_support', {}).get('progressive_enhancement') else 'required'}
+
+**Development Tools:**
+- Build tools: {', '.join(technical_analysis.get('build_tools', ['Webpack/Vite']))}
+- Deployment: {technical_analysis.get('deployment_indicators', {}).get('deployment_type', 'Static/CDN deployment')}
+{architecture_rec}
+
+**Code Quality Standards:**
+- CSS Methodology: {technical_analysis.get('code_quality', {}).get('css_methodology', 'BEM or Utility-first')}
+- Semantic HTML: {technical_analysis.get('code_quality', {}).get('semantic_html', 'Required')} compliance
+- Maintainability: {technical_analysis.get('code_quality', {}).get('maintainability', 'High')} standard
+
+**API Integration:**
+{f"- REST API integration: {technical_analysis.get('api_integrations', {}).get('rest_api_usage', 'Not detected')}" if technical_analysis.get('api_integrations') else '- API integration as needed'}
+{f"- GraphQL usage: {technical_analysis.get('api_integrations', {}).get('graphql_usage', 'Not detected')}" if technical_analysis.get('api_integrations', {}).get('graphql_usage') else ''}
+{f"- Third-party APIs: {", ".join(technical_analysis.get("api_integrations", {}).get("third_party_apis", []))}" if technical_analysis.get('api_integrations', {}).get('third_party_apis') else ''}
+
+**Accessibility Implementation:**
+- ARIA patterns: {technical_analysis.get('accessibility_implementation', {}).get('aria_usage', {}).get('aria_labels', 'Implement')}
+- Keyboard navigation: {technical_analysis.get('accessibility_implementation', {}).get('keyboard_navigation', 'Full support required')}
+- Screen reader support: {technical_analysis.get('accessibility_implementation', {}).get('screen_reader_support', 'Comprehensive')}
+- Color contrast: {technical_analysis.get('accessibility_implementation', {}).get('color_contrast', 'WCAG AA compliant')}"""
     
     def _fallback_content_prompt(self, content_analysis: Dict[str, Any]) -> str:
-        """Fallback content prompt when AI generation fails."""
+        """Enhanced fallback content prompt using comprehensive analysis data."""
         content_structure = content_analysis.get('content_structure', {})
         content_types = content_analysis.get('content_types', [])
+        multimedia_usage = content_analysis.get('multimedia_usage', {})
+        information_architecture = content_analysis.get('information_architecture', {})
         
-        return f"""Content Strategy Guidelines:
+        return f"""## Content Strategy & Information Architecture
 
-Content Structure:
-- Content density: {content_structure.get('content_density', 'medium')}
-- Structure type: {content_structure.get('structure_type', 'page')}
-- Word count target: {content_structure.get('word_count', 500)} words
+### Content Structure Analysis
+**Content Organization:**
+- Density level: {content_structure.get('content_density', 'medium')} content density
+- Structure type: {content_structure.get('structure_type', 'hierarchical')} organization
+- Average word count: {content_structure.get('word_count', 500)} words per page
+- Content depth: {content_structure.get('content_depth', 'moderate')} complexity
 
-Content Types:
-{chr(10).join(f'- {content_type}' for content_type in content_types) if content_types else '- Text content, Images'}
+### Content Types Identified
+{chr(10).join(f'- **{content_type.replace("_", " ").title()}**: Essential for user engagement' for content_type in content_types) if content_types else '- Text content\n- Visual content\n- Interactive elements'}
 
-Organization:
-- Use clear headings and hierarchy
-- Implement logical content flow
-- Include relevant multimedia elements
-- Ensure content supports user goals"""
+### Information Architecture
+**Navigation Structure:**
+- Hierarchy depth: {information_architecture.get('hierarchy_depth', 3)} levels
+- Content categorization: {information_architecture.get('categorization', 'logical')}
+- User flow: {information_architecture.get('user_flow', 'linear')} progression
+- Content discovery: {information_architecture.get('discovery_method', 'navigation-based')}
+
+### Multimedia Integration Strategy
+**Visual Content:**
+- Image usage: {multimedia_usage.get('image_count', 'moderate')} implementation
+- Video content: {'Present' if multimedia_usage.get('has_video') else 'Consider adding'}
+- Interactive media: {'Detected' if multimedia_usage.get('interactive_media') else 'Optional enhancement'}
+- Gallery features: {'Implemented' if multimedia_usage.get('has_gallery') else 'Not present'}
+
+### Content Presentation Guidelines
+**Writing Style:**
+- Tone: {content_analysis.get('content_tone', 'professional')}
+- Reading level: {content_analysis.get('reading_level', 'general audience')}
+- Content format: {content_analysis.get('content_format', 'mixed media')}
+
+**Content Hierarchy:**
+1. **Primary Content**: {content_structure.get('primary_content_type', 'Main informational content')}
+2. **Secondary Content**: {content_structure.get('secondary_content_type', 'Supporting details and context')}
+3. **Tertiary Content**: {content_structure.get('tertiary_content_type', 'Additional resources and links')}
+
+### Content Management Requirements
+**Organization Principles:**
+- Use clear headings with {information_architecture.get('heading_levels', 3)}-level hierarchy
+- Implement logical content flow with clear progression
+- Include relevant multimedia elements for engagement
+- Ensure content supports primary user goals and objectives
+- Maintain consistent voice and tone throughout
+
+**SEO Content Strategy:**
+- Target keyword density: {content_analysis.get('keyword_density', 'natural')}
+- Content freshness: {content_analysis.get('content_freshness', 'regular updates recommended')}
+- Internal linking: {content_analysis.get('internal_linking', 'strategic implementation')}
+
+**Accessibility Considerations:**
+- Alt text for all images and media
+- Clear and descriptive headings
+- Logical reading order
+- Plain language principles where appropriate"""
     
     def _fallback_ux_prompt(self, ux_analysis: Dict[str, Any]) -> str:
-        """Fallback UX prompt when AI generation fails."""
+        """Enhanced fallback UX prompt using comprehensive analysis data."""
         user_journey = ux_analysis.get('user_journey', {})
         mobile_experience = ux_analysis.get('mobile_experience', {})
+        accessibility_features = ux_analysis.get('accessibility_features', {})
+        conversion_optimization = ux_analysis.get('conversion_optimization', {})
+        interaction_design = ux_analysis.get('interaction_design', {})
         
-        return f"""User Experience Guidelines:
+        return f"""## User Experience Strategy & Implementation Guide
 
-User Journey:
-- Entry points: {', '.join(user_journey.get('entry_points', ['homepage']))}
-- Conversion points: {', '.join(user_journey.get('conversion_points', ['contact']))}
-- Journey complexity: {user_journey.get('journey_complexity', 'simple')}
+### User Journey Mapping
+**Entry Points Analysis:**
+- Primary entry: {', '.join(user_journey.get('entry_points', ['homepage']))}
+- User intent: {user_journey.get('primary_intent', 'information seeking')}
+- Journey complexity: {user_journey.get('journey_complexity', 'simple')} user flow
 
-Mobile Experience:
-- Mobile responsive: {mobile_experience.get('mobile_responsive', True)}
-- Mobile optimization: {mobile_experience.get('mobile_optimization', 'basic')}
+**Conversion Funnel:**
+- Conversion points: {', '.join(user_journey.get('conversion_points', ['contact form']))}
+- Funnel stages: {user_journey.get('funnel_stages', 3)} main steps
+- Drop-off prevention: {user_journey.get('retention_strategy', 'Clear CTAs and progress indicators')}
 
-Accessibility:
-- Follow WCAG guidelines
-- Ensure keyboard navigation
-- Provide alternative text for images
-- Use semantic HTML structure"""
+### Mobile User Experience
+**Mobile Optimization:**
+- Responsive design: {'Implemented' if mobile_experience.get('mobile_responsive') else 'Required'}
+- Mobile-first approach: {mobile_experience.get('mobile_optimization', 'Recommended')}
+- Touch interface: {'Optimized' if mobile_experience.get('touch_optimized') else 'Implement finger-friendly targets'}
+- Mobile performance: {mobile_experience.get('mobile_performance', 'Optimize for 3G networks')}
+
+**Cross-Device Experience:**
+- Continuity: {mobile_experience.get('cross_device_continuity', 'Maintain consistent experience')}
+- Adaptive layout: {mobile_experience.get('adaptive_features', 'Context-aware adjustments')}
+
+### Accessibility & Inclusive Design
+**WCAG Compliance:**
+- Current level: {accessibility_features.get('accessibility_score', 'AA target')}
+- Keyboard navigation: {accessibility_features.get('keyboard_support', 'Full support required')}
+- Screen reader support: {accessibility_features.get('screen_reader', 'Comprehensive compatibility')}
+- Color contrast: {accessibility_features.get('contrast_ratio', 'WCAG AA minimum')}
+
+**Assistive Technology Support:**
+- ARIA implementation: {'Present' if accessibility_features.get('aria_usage') else 'Implement comprehensive ARIA labels'}
+- Focus management: {accessibility_features.get('focus_management', 'Logical tab order required')}
+- Alternative content: {accessibility_features.get('alt_content', 'All media needs alternatives')}
+
+### Interaction Design Patterns
+**Micro-Interactions:**
+- Feedback systems: {interaction_design.get('feedback_patterns', 'Visual and auditory confirmation')}
+- Loading states: {interaction_design.get('loading_patterns', 'Progressive loading with indicators')}
+- Error handling: {interaction_design.get('error_handling', 'Graceful error recovery')}
+- Success states: {interaction_design.get('success_patterns', 'Clear completion feedback')}
+
+**Animation & Transitions:**
+- Animation philosophy: {interaction_design.get('animation_style', 'Subtle and purposeful')}
+- Transition timing: {interaction_design.get('transition_duration', '200-300ms standard')}
+- Reduced motion: {interaction_design.get('reduced_motion', 'Respect user preferences')}
+
+### Conversion Optimization Strategy
+**Conversion Elements:**
+- CTA effectiveness: {conversion_optimization.get('cta_performance', 'Prominent and action-oriented')}
+- Form optimization: {conversion_optimization.get('form_optimization', 'Minimize friction and fields')}
+- Trust signals: {conversion_optimization.get('trust_elements', 'Social proof and security indicators')}
+- Value proposition: {conversion_optimization.get('value_communication', 'Clear and compelling messaging')}
+
+**User Engagement:**
+- Engagement patterns: {conversion_optimization.get('engagement_strategy', 'Progressive disclosure')}
+- Personalization: {conversion_optimization.get('personalization', 'Contextual content adaptation')}
+- Retention hooks: {conversion_optimization.get('retention_features', 'Value-driven return incentives')}
+
+### Performance & Usability Standards
+**Core UX Metrics:**
+- Page load perception: {ux_analysis.get('performance_perception', 'Sub-3 second perceived load')}
+- Interaction responsiveness: {ux_analysis.get('interaction_speed', 'Immediate feedback (<100ms)')}
+- Navigation efficiency: {ux_analysis.get('navigation_efficiency', 'Maximum 3-click rule')}
+
+**Testing & Validation:**
+- User testing approach: {ux_analysis.get('testing_strategy', 'Iterative usability testing')}
+- A/B testing priorities: {ux_analysis.get('ab_testing', 'Conversion points and navigation')}
+- Analytics implementation: {ux_analysis.get('analytics_tracking', 'Comprehensive user behavior tracking')}
+
+### Implementation Priorities
+1. **Foundation**: Responsive layout and basic accessibility
+2. **Core Journey**: Primary user flow optimization  
+3. **Conversion**: CTA placement and form optimization
+4. **Enhancement**: Micro-interactions and advanced features
+5. **Testing**: User feedback integration and iterative improvement"""
     
     def _fallback_executive_summary(self, website_info: Dict[str, Any], business_model: Dict[str, Any]) -> str:
-        """Fallback executive summary when AI generation fails."""
-        return f"""Project Vision:
-Create a {website_info.get('website_type', 'modern')} website that serves the primary purpose of {website_info.get('primary_purpose', 'providing information')} for {website_info.get('target_audience', 'target users')}.
+        """Enhanced fallback executive summary using comprehensive analysis data."""
+        website_type = website_info.get('website_type', 'modern web application')
+        primary_purpose = website_info.get('primary_purpose', 'digital presence')
+        target_audience = website_info.get('target_audience', 'target users')
+        industry = website_info.get('industry_category', 'digital services')
+        business_type = business_model.get('business_type', 'service-based')
+        monetization = business_model.get('monetization_strategy', [])
+        value_prop = business_model.get('value_proposition', 'comprehensive solution')
+        
+        return f"""## Project Executive Summary
 
-Key Requirements:
-- Implement responsive design for all devices
-- Ensure fast loading times and good performance
-- Follow modern web development best practices
-- Include necessary functionality for user goals
-- Maintain professional appearance and usability
+### Project Vision & Scope
+**Objective**: Create a high-quality {website_type} that serves as {primary_purpose} for {target_audience} in the {industry} sector.
 
-Implementation Strategy:
-- Use modern web technologies and frameworks
-- Follow agile development methodology
-- Implement progressive enhancement
-- Ensure accessibility compliance
-- Test across multiple browsers and devices
+**Business Context:**
+- Industry: {industry.replace('_', ' ').title()}
+- Business model: {business_type.replace('_', ' ').title()}
+- Value proposition: {value_prop}
+{f"- Monetization strategy: {', '.join(monetization)}" if monetization else "- Revenue model: To be defined based on business goals"}
 
-Success Factors:
-- User-centered design approach
-- Performance optimization
-- SEO-friendly implementation
-- Scalable and maintainable code
-- Comprehensive testing and validation"""
+### Target Audience Analysis
+**Primary Users:** {target_audience}
+- User intent: {website_info.get('user_intent', 'Seeking information and services')}
+- Technical proficiency: {website_info.get('technical_level', 'Mixed skill levels')}
+- Device preferences: {website_info.get('device_usage', 'Multi-device usage')}
+
+### Core Requirements Summary
+**Functional Requirements:**
+1. **Primary Features**: Implement core {primary_purpose} functionality
+2. **User Experience**: Intuitive navigation and interaction design
+3. **Performance**: Fast loading times and responsive design
+4. **Accessibility**: WCAG 2.1 AA compliance for inclusive access
+5. **Security**: Industry-standard security measures and data protection
+
+**Technical Requirements:**
+- Modern web development stack with future-proof technologies
+- Responsive design supporting all device types and screen sizes
+- SEO optimization for search engine visibility
+- Cross-browser compatibility and progressive enhancement
+- Scalable architecture supporting business growth
+
+**Design Requirements:**
+- Professional visual design aligned with brand identity
+- Consistent design system and component library
+- User-centered interface design with clear information hierarchy
+- Brand-appropriate color palette and typography choices
+- Mobile-first responsive design approach
+
+### Implementation Strategy
+**Development Approach:**
+- Agile/iterative development methodology
+- Component-based architecture for maintainability
+- Progressive enhancement starting with core functionality
+- Continuous testing and user feedback integration
+
+**Quality Assurance:**
+- Comprehensive cross-browser and device testing
+- Performance optimization and monitoring
+- Accessibility testing and compliance verification
+- Security auditing and vulnerability assessment
+- User acceptance testing and feedback incorporation
+
+**Deployment & Maintenance:**
+- Modern deployment pipeline with version control
+- Content management system for easy updates
+- Performance monitoring and analytics integration
+- Regular security updates and maintenance schedule
+- Scalable hosting solution supporting traffic growth
+
+### Success Metrics & KPIs
+**Performance Indicators:**
+- Page load time: Target <3 seconds
+- Mobile performance: Core Web Vitals compliance
+- Accessibility: WCAG 2.1 AA certification
+- User engagement: Improved bounce rate and session duration
+- Conversion: Enhanced user goal completion rates
+
+**Business Outcomes:**
+- Increased {target_audience} engagement and satisfaction
+- Enhanced brand presence and professional credibility
+- Improved operational efficiency through digital transformation
+- Measurable ROI through {primary_purpose} optimization
+- Scalable foundation for future business growth
+
+### Risk Mitigation
+**Technical Risks:**
+- Browser compatibility through progressive enhancement
+- Performance issues via optimization and monitoring
+- Security vulnerabilities through best practices and auditing
+- Scalability concerns via cloud-based infrastructure
+
+**Project Risks:**
+- Scope creep through clear requirements documentation
+- Timeline delays via agile methodology and regular check-ins
+- Budget overruns through phased development approach
+- User adoption via comprehensive testing and feedback integration"""

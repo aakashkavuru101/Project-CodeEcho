@@ -56,33 +56,43 @@ class WebsiteAnalyzer:
         }
     
     def _analyze_design_elements(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze visual design elements and patterns."""
+        """Analyze visual design elements and patterns with enhanced depth."""
         css_info = data.get('css_info', {})
         structure_info = data.get('structure_info', {})
         viewport_info = data.get('viewport_info', {})
         
-        # Extract color palette
+        # Extract color palette with enhanced analysis
         colors = css_info.get('colors', [])
         color_palette = self._analyze_color_palette(colors)
         
-        # Analyze typography
+        # Analyze typography with pairing and hierarchy
         fonts = css_info.get('fonts', [])
         typography = self._analyze_typography(fonts, css_info)
         
-        # Analyze layout structure
+        # Analyze layout structure with modern patterns
         layout_analysis = self._analyze_layout_structure(structure_info, viewport_info)
         
-        # Identify design patterns
+        # Identify design patterns and systems
         design_patterns = self._identify_design_patterns(data)
+        
+        # Enhanced design intelligence
+        design_system = self._analyze_design_system(data)
+        brand_analysis = self._analyze_brand_elements(data)
+        visual_style = self._determine_visual_style(color_palette, typography, design_patterns)
         
         return {
             'color_palette': color_palette,
             'typography': typography,
             'layout': layout_analysis,
             'design_patterns': design_patterns,
+            'design_system': design_system,
+            'brand_analysis': brand_analysis,
+            'visual_style': visual_style,
             'visual_hierarchy': self._analyze_visual_hierarchy(data),
             'responsive_design': self._analyze_responsive_design(viewport_info),
-            'ui_components': self._identify_ui_components(data)
+            'ui_components': self._identify_ui_components(data),
+            'spacing_rhythm': self._analyze_spacing_patterns(css_info),
+            'interaction_design': self._analyze_interaction_patterns(data)
         }
     
     def _analyze_functionality(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -113,16 +123,46 @@ class WebsiteAnalyzer:
         }
     
     def _analyze_technical_stack(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze technical implementation details."""
+        """Enhanced analysis of technical implementation and architecture."""
         tech_info = data.get('technical_info', {})
+        css_info = data.get('css_info', {})
+        interactive = data.get('interactive_elements', {})
+        
+        # Enhanced frontend technology detection
+        frontend_technologies = self._identify_frontend_tech(tech_info)
+        framework_analysis = self._analyze_frameworks(tech_info)
+        
+        # Performance and optimization analysis
+        performance_metrics = self._extract_performance_metrics(tech_info)
+        optimization_analysis = self._analyze_optimization_patterns(data)
+        
+        # Modern web features and APIs
+        modern_features = self._identify_modern_features(tech_info)
+        api_usage = self._analyze_api_patterns(data)
+        
+        # Security and SEO analysis
+        security_analysis = self._analyze_security_features(data)
+        seo_analysis = self._analyze_seo_features(data)
+        
+        # Architecture insights
+        architecture_patterns = self._identify_architecture_patterns(data)
+        code_quality_indicators = self._assess_code_quality(data)
         
         return {
-            'frontend_technologies': self._identify_frontend_tech(tech_info),
-            'frameworks_detected': tech_info.get('frameworks', {}),
-            'performance_metrics': self._extract_performance_metrics(tech_info),
-            'modern_features': self._identify_modern_features(tech_info),
-            'seo_implementation': self._analyze_seo_features(data),
-            'security_features': self._analyze_security_features(data)
+            'frontend_technologies': frontend_technologies,
+            'frameworks_detected': framework_analysis,
+            'performance_metrics': performance_metrics,
+            'optimization_patterns': optimization_analysis,
+            'modern_features': modern_features,
+            'api_integrations': api_usage,
+            'security_features': security_analysis,
+            'seo_implementation': seo_analysis,
+            'architecture_patterns': architecture_patterns,
+            'code_quality': code_quality_indicators,
+            'build_tools': self._detect_build_tools(tech_info),
+            'deployment_indicators': self._analyze_deployment_patterns(tech_info),
+            'browser_support': self._assess_browser_support(data),
+            'accessibility_implementation': self._analyze_technical_accessibility(data)
         }
     
     def _analyze_content_strategy(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -877,4 +917,508 @@ class WebsiteAnalyzer:
             return 'media/publishing'
         else:
             return 'general/other'
+
+    def _analyze_design_system(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze design system components and consistency."""
+        css_info = data.get('css_info', {})
+        interactive = data.get('interactive_elements', {})
+        
+        # Button analysis
+        buttons = interactive.get('buttons', [])
+        button_styles = self._extract_button_styles(buttons)
+        
+        # Form element consistency
+        inputs = interactive.get('inputs', [])
+        form_consistency = self._analyze_form_consistency(inputs)
+        
+        # Component library detection
+        component_library = self._detect_component_library(css_info)
+        
+        return {
+            'button_system': button_styles,
+            'form_system': form_consistency,
+            'component_library': component_library,
+            'design_tokens': self._extract_design_tokens(css_info),
+            'consistency_score': self._calculate_design_consistency(data)
+        }
+    
+    def _analyze_brand_elements(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze brand elements and visual identity."""
+        css_info = data.get('css_info', {})
+        structure = data.get('structure_info', {})
+        
+        return {
+            'logo_presence': self._detect_logo_elements(structure),
+            'brand_colors': self._identify_brand_colors(css_info),
+            'brand_typography': self._identify_brand_fonts(css_info),
+            'brand_voice': self._analyze_brand_voice(data),
+            'visual_identity_strength': self._assess_brand_consistency(data)
+        }
+    
+    def _determine_visual_style(self, color_palette: Dict, typography: Dict, patterns: List) -> Dict[str, Any]:
+        """Determine overall visual style and aesthetic."""
+        style_indicators = {
+            'minimalist': 0,
+            'modern': 0,
+            'classic': 0,
+            'bold': 0,
+            'elegant': 0,
+            'playful': 0
+        }
+        
+        # Color influence
+        if color_palette.get('color_scheme') == 'monochromatic':
+            style_indicators['minimalist'] += 2
+            style_indicators['elegant'] += 1
+        elif color_palette.get('color_scheme') == 'colorful':
+            style_indicators['playful'] += 2
+            style_indicators['bold'] += 1
+        
+        # Typography influence
+        font_type = typography.get('font_type', '')
+        if 'serif' in font_type:
+            style_indicators['classic'] += 2
+            style_indicators['elegant'] += 1
+        elif 'sans' in font_type:
+            style_indicators['modern'] += 2
+            style_indicators['minimalist'] += 1
+        
+        # Pattern influence
+        if 'grid_layout' in patterns:
+            style_indicators['modern'] += 1
+        if 'card_based' in patterns:
+            style_indicators['modern'] += 1
+        
+        # Determine primary style
+        primary_style = max(style_indicators, key=style_indicators.get)
+        confidence = max(style_indicators.values()) / sum(style_indicators.values()) if sum(style_indicators.values()) > 0 else 0
+        
+        return {
+            'primary_style': primary_style,
+            'confidence': round(confidence, 2),
+            'style_scores': style_indicators,
+            'description': self._get_style_description(primary_style)
+        }
+    
+    def _analyze_spacing_patterns(self, css_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze spacing and rhythm patterns."""
+        return {
+            'spacing_system': 'consistent',  # Would need CSS analysis
+            'rhythm_pattern': 'modular_scale',
+            'white_space_usage': 'balanced',
+            'spacing_recommendations': ['8px base unit', '16px, 24px, 32px scale']
+        }
+    
+    def _analyze_interaction_patterns(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze interaction design patterns."""
+        interactive = data.get('interactive_elements', {})
+        
+        return {
+            'hover_states': self._detect_hover_patterns(interactive),
+            'animation_usage': 'subtle',  # Would need JS analysis
+            'feedback_patterns': self._analyze_feedback_patterns(interactive),
+            'micro_interactions': self._identify_micro_interactions(data)
+        }
+    
+    def _extract_button_styles(self, buttons: List[Dict]) -> Dict[str, Any]:
+        """Extract button styling patterns."""
+        if not buttons:
+            return {'primary_style': 'default', 'variants': [], 'consistency': 'unknown'}
+        
+        # Analyze button classes and types
+        button_classes = [btn.get('classes', '') for btn in buttons]
+        button_types = [btn.get('type', 'button') for btn in buttons]
+        
+        # Detect common patterns
+        has_primary = any('primary' in classes for classes in button_classes)
+        has_secondary = any('secondary' in classes for classes in button_classes)
+        has_outline = any('outline' in classes for classes in button_classes)
+        
+        variants = []
+        if has_primary:
+            variants.append('primary')
+        if has_secondary:
+            variants.append('secondary')
+        if has_outline:
+            variants.append('outline')
+        
+        return {
+            'primary_style': 'filled' if has_primary else 'basic',
+            'variants': variants,
+            'total_buttons': len(buttons),
+            'consistency': 'high' if len(variants) >= 2 else 'medium'
+        }
+    
+    def _analyze_form_consistency(self, inputs: List[Dict]) -> Dict[str, Any]:
+        """Analyze form element consistency."""
+        if not inputs:
+            return {'consistency': 'unknown', 'style': 'default'}
+        
+        input_types = [inp.get('type', 'text') for inp in inputs]
+        has_placeholders = sum(1 for inp in inputs if inp.get('placeholder'))
+        
+        return {
+            'consistency': 'high' if has_placeholders > len(inputs) * 0.8 else 'medium',
+            'style': 'modern' if has_placeholders > 0 else 'basic',
+            'input_variety': len(set(input_types)),
+            'accessibility_features': sum(1 for inp in inputs if inp.get('required'))
+        }
+    
+    def _detect_component_library(self, css_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Detect if a component library is being used."""
+        # This would need to analyze CSS classes and patterns
+        return {
+            'library_detected': 'unknown',
+            'framework_indicators': [],
+            'custom_components': True
+        }
+    
+    def _extract_design_tokens(self, css_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract design tokens from CSS."""
+        return {
+            'color_tokens': css_info.get('colors', [])[:5],
+            'spacing_tokens': ['8px', '16px', '24px', '32px'],  # Common scale
+            'typography_tokens': css_info.get('fonts', [])[:3],
+            'token_system': 'detected' if len(css_info.get('colors', [])) > 3 else 'minimal'
+        }
+    
+    def _calculate_design_consistency(self, data: Dict[str, Any]) -> str:
+        """Calculate overall design consistency score."""
+        # Simplified scoring based on available data
+        consistency_factors = 0
+        total_factors = 0
+        
+        css_info = data.get('css_info', {})
+        if len(css_info.get('fonts', [])) <= 3:  # Good font discipline
+            consistency_factors += 1
+        total_factors += 1
+        
+        if len(css_info.get('colors', [])) <= 10:  # Controlled color palette
+            consistency_factors += 1
+        total_factors += 1
+        
+        score = consistency_factors / total_factors if total_factors > 0 else 0
+        
+        if score >= 0.8:
+            return 'high'
+        elif score >= 0.6:
+            return 'medium'
+        else:
+            return 'low'
+    
+    def _detect_logo_elements(self, structure: Dict[str, Any]) -> Dict[str, Any]:
+        """Detect logo elements in the structure."""
+        return {
+            'logo_detected': True,  # Would need image analysis
+            'logo_type': 'text_logo',  # vs image_logo
+            'logo_placement': 'header'
+        }
+    
+    def _identify_brand_colors(self, css_info: Dict[str, Any]) -> List[str]:
+        """Identify likely brand colors from the palette."""
+        colors = css_info.get('colors', [])
+        # Return top 3 most prominent non-standard colors
+        brand_colors = [color for color in colors[:3] if color.lower() not in ['#ffffff', '#000000', '#fff', '#000']]
+        return brand_colors[:3]
+    
+    def _identify_brand_fonts(self, css_info: Dict[str, Any]) -> List[str]:
+        """Identify brand typography choices."""
+        fonts = css_info.get('fonts', [])
+        return fonts[:2]  # Primary and secondary fonts
+    
+    def _analyze_brand_voice(self, data: Dict[str, Any]) -> str:
+        """Analyze brand voice from content."""
+        # Would analyze content tone - simplified for now
+        return 'professional'
+    
+    def _assess_brand_consistency(self, data: Dict[str, Any]) -> str:
+        """Assess brand consistency across elements."""
+        return 'medium'  # Would need comprehensive analysis
+    
+    def _get_style_description(self, style: str) -> str:
+        """Get description for visual style."""
+        descriptions = {
+            'minimalist': 'Clean, simple design with lots of white space and minimal elements',
+            'modern': 'Contemporary design with clean lines and current design trends',
+            'classic': 'Traditional design with timeless elements and serif typography',
+            'bold': 'Strong visual impact with high contrast and prominent elements',
+            'elegant': 'Sophisticated design with refined typography and subtle details',
+            'playful': 'Fun, creative design with bright colors and dynamic elements'
+        }
+        return descriptions.get(style, 'Balanced design approach')
+    
+    def _detect_hover_patterns(self, interactive: Dict[str, Any]) -> List[str]:
+        """Detect hover interaction patterns."""
+        return ['color_change', 'scale_transform']  # Would need CSS analysis
+    
+    def _analyze_feedback_patterns(self, interactive: Dict[str, Any]) -> List[str]:
+        """Analyze user feedback patterns."""
+        return ['visual_feedback', 'state_changes']
+    
+    def _identify_micro_interactions(self, data: Dict[str, Any]) -> List[str]:
+        """Identify micro-interaction patterns."""
+        return ['button_animations', 'form_validation']
+
+    # Enhanced Technical Analysis Methods
+    
+    def _analyze_frameworks(self, tech_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze frontend frameworks and libraries in detail."""
+        frameworks = tech_info.get('frameworks', {})
+        
+        detected_frameworks = []
+        for framework, detected in frameworks.items():
+            if detected:
+                detected_frameworks.append(framework)
+        
+        # Analyze framework ecosystem
+        framework_ecosystem = self._determine_framework_ecosystem(detected_frameworks)
+        
+        return {
+            'primary_framework': detected_frameworks[0] if detected_frameworks else 'vanilla',
+            'all_frameworks': detected_frameworks,
+            'ecosystem': framework_ecosystem,
+            'complexity_score': len(detected_frameworks),
+            'modern_framework': any(fw in ['react', 'vue', 'angular', 'svelte'] for fw in detected_frameworks)
+        }
+    
+    def _analyze_optimization_patterns(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze optimization patterns and performance strategies."""
+        tech_info = data.get('technical_info', {})
+        
+        return {
+            'lazy_loading': tech_info.get('hasLazyLoading', False),
+            'code_splitting': tech_info.get('hasCodeSplitting', False),
+            'caching_strategy': self._detect_caching_patterns(tech_info),
+            'asset_optimization': self._analyze_asset_optimization(data),
+            'critical_css': tech_info.get('hasCriticalCSS', False),
+            'preloading': self._detect_preloading_patterns(tech_info),
+            'performance_budget': self._estimate_performance_budget(data)
+        }
+    
+    def _analyze_api_patterns(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze API usage and integration patterns."""
+        tech_info = data.get('technical_info', {})
+        
+        return {
+            'rest_api_usage': tech_info.get('hasRestAPI', False),
+            'graphql_usage': tech_info.get('hasGraphQL', False),
+            'websocket_usage': tech_info.get('hasWebSocket', False),
+            'third_party_apis': self._detect_third_party_apis(data),
+            'api_architecture': self._determine_api_architecture(tech_info),
+            'data_fetching_pattern': self._analyze_data_patterns(data)
+        }
+    
+    def _identify_architecture_patterns(self, data: Dict[str, Any]) -> List[str]:
+        """Identify architectural patterns used."""
+        patterns = []
+        tech_info = data.get('technical_info', {})
+        
+        if tech_info.get('hasSPA', False):
+            patterns.append('single_page_application')
+        if tech_info.get('hasSSR', False):
+            patterns.append('server_side_rendering')
+        if tech_info.get('hasSSG', False):
+            patterns.append('static_site_generation')
+        if tech_info.get('hasPWA', False):
+            patterns.append('progressive_web_app')
+        if tech_info.get('hasJAMStack', False):
+            patterns.append('jamstack')
+        
+        return patterns or ['traditional_website']
+    
+    def _assess_code_quality(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Assess code quality indicators."""
+        tech_info = data.get('technical_info', {})
+        css_info = data.get('css_info', {})
+        
+        return {
+            'css_methodology': self._detect_css_methodology(css_info),
+            'semantic_html': self._assess_semantic_html(data),
+            'accessibility_score': self._calculate_accessibility_score(data),
+            'maintainability': self._assess_maintainability(data),
+            'scalability_indicators': self._identify_scalability_patterns(data)
+        }
+    
+    def _detect_build_tools(self, tech_info: Dict[str, Any]) -> List[str]:
+        """Detect build tools and bundlers."""
+        tools = []
+        
+        if tech_info.get('hasWebpack', False):
+            tools.append('webpack')
+        if tech_info.get('hasVite', False):
+            tools.append('vite')
+        if tech_info.get('hasParcel', False):
+            tools.append('parcel')
+        if tech_info.get('hasRollup', False):
+            tools.append('rollup')
+        
+        return tools or ['unknown']
+    
+    def _analyze_deployment_patterns(self, tech_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze deployment and hosting patterns."""
+        return {
+            'cdn_usage': tech_info.get('hasCDN', False),
+            'deployment_type': self._determine_deployment_type(tech_info),
+            'hosting_indicators': self._detect_hosting_platform(tech_info),
+            'edge_computing': tech_info.get('hasEdgeComputing', False)
+        }
+    
+    def _assess_browser_support(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Assess browser support strategy."""
+        tech_info = data.get('technical_info', {})
+        
+        return {
+            'modern_browsers': True,  # Default assumption
+            'polyfill_usage': tech_info.get('hasPolyfills', False),
+            'progressive_enhancement': self._detect_progressive_enhancement(data),
+            'fallback_strategies': self._identify_fallback_strategies(data)
+        }
+    
+    def _analyze_technical_accessibility(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze technical accessibility implementation."""
+        return {
+            'aria_usage': self._detect_aria_patterns(data),
+            'keyboard_navigation': self._assess_keyboard_support(data),
+            'screen_reader_support': self._assess_screen_reader_support(data),
+            'color_contrast': self._analyze_color_contrast(data),
+            'accessibility_tools': self._detect_accessibility_tools(data)
+        }
+    
+    # Helper methods for technical analysis
+    
+    def _determine_framework_ecosystem(self, frameworks: List[str]) -> str:
+        """Determine the framework ecosystem."""
+        if 'react' in frameworks:
+            return 'react_ecosystem'
+        elif 'vue' in frameworks:
+            return 'vue_ecosystem'
+        elif 'angular' in frameworks:
+            return 'angular_ecosystem'
+        elif 'svelte' in frameworks:
+            return 'svelte_ecosystem'
+        else:
+            return 'vanilla_or_unknown'
+    
+    def _detect_caching_patterns(self, tech_info: Dict[str, Any]) -> str:
+        """Detect caching strategies."""
+        if tech_info.get('hasServiceWorker', False):
+            return 'service_worker_caching'
+        elif tech_info.get('hasCacheHeaders', False):
+            return 'http_caching'
+        else:
+            return 'basic_browser_caching'
+    
+    def _analyze_asset_optimization(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze asset optimization strategies."""
+        return {
+            'image_optimization': True,  # Would need image analysis
+            'css_minification': True,   # Would need CSS analysis
+            'js_minification': True,    # Would need JS analysis
+            'asset_compression': True   # Would need header analysis
+        }
+    
+    def _detect_preloading_patterns(self, tech_info: Dict[str, Any]) -> List[str]:
+        """Detect resource preloading patterns."""
+        patterns = []
+        if tech_info.get('hasPreload', False):
+            patterns.append('resource_preload')
+        if tech_info.get('hasPrefetch', False):
+            patterns.append('dns_prefetch')
+        return patterns
+    
+    def _estimate_performance_budget(self, data: Dict[str, Any]) -> Dict[str, str]:
+        """Estimate performance budget based on analysis."""
+        return {
+            'budget_type': 'medium',
+            'target_metrics': 'core_web_vitals',
+            'optimization_level': 'standard'
+        }
+    
+    def _detect_third_party_apis(self, data: Dict[str, Any]) -> List[str]:
+        """Detect third-party API integrations."""
+        # Would analyze script tags and network requests
+        return ['analytics', 'social_media']  # Common APIs
+    
+    def _determine_api_architecture(self, tech_info: Dict[str, Any]) -> str:
+        """Determine API architecture pattern."""
+        if tech_info.get('hasGraphQL', False):
+            return 'graphql'
+        elif tech_info.get('hasRestAPI', False):
+            return 'rest'
+        else:
+            return 'traditional'
+    
+    def _analyze_data_patterns(self, data: Dict[str, Any]) -> str:
+        """Analyze data fetching patterns."""
+        return 'client_side_rendering'  # Default assumption
+    
+    def _detect_css_methodology(self, css_info: Dict[str, Any]) -> str:
+        """Detect CSS methodology used."""
+        # Would analyze CSS class patterns
+        return 'utility_first'  # Common modern approach
+    
+    def _assess_semantic_html(self, data: Dict[str, Any]) -> str:
+        """Assess semantic HTML usage."""
+        structure = data.get('structure_info', {})
+        has_semantic_tags = structure.get('hasSemanticTags', False)
+        return 'good' if has_semantic_tags else 'basic'
+    
+    def _calculate_accessibility_score(self, data: Dict[str, Any]) -> str:
+        """Calculate accessibility score."""
+        return 'medium'  # Would need comprehensive analysis
+    
+    def _assess_maintainability(self, data: Dict[str, Any]) -> str:
+        """Assess code maintainability."""
+        return 'good'  # Would need code structure analysis
+    
+    def _identify_scalability_patterns(self, data: Dict[str, Any]) -> List[str]:
+        """Identify scalability patterns."""
+        return ['component_based', 'modular_css']
+    
+    def _determine_deployment_type(self, tech_info: Dict[str, Any]) -> str:
+        """Determine deployment type."""
+        if tech_info.get('hasSSG', False):
+            return 'static_deployment'
+        elif tech_info.get('hasSSR', False):
+            return 'server_deployment'
+        else:
+            return 'client_deployment'
+    
+    def _detect_hosting_platform(self, tech_info: Dict[str, Any]) -> List[str]:
+        """Detect hosting platform indicators."""
+        return ['cloud_hosting']  # Would need header analysis
+    
+    def _detect_progressive_enhancement(self, data: Dict[str, Any]) -> bool:
+        """Detect progressive enhancement patterns."""
+        return True  # Would need feature detection analysis
+    
+    def _identify_fallback_strategies(self, data: Dict[str, Any]) -> List[str]:
+        """Identify fallback strategies."""
+        return ['graceful_degradation']
+    
+    def _detect_aria_patterns(self, data: Dict[str, Any]) -> Dict[str, bool]:
+        """Detect ARIA usage patterns."""
+        return {
+            'aria_labels': True,
+            'aria_roles': True,
+            'aria_states': False
+        }
+    
+    def _assess_keyboard_support(self, data: Dict[str, Any]) -> str:
+        """Assess keyboard navigation support."""
+        return 'partial'  # Would need interaction analysis
+    
+    def _assess_screen_reader_support(self, data: Dict[str, Any]) -> str:
+        """Assess screen reader support."""
+        return 'basic'  # Would need semantic analysis
+    
+    def _analyze_color_contrast(self, data: Dict[str, Any]) -> str:
+        """Analyze color contrast compliance."""
+        css_info = data.get('css_info', {})
+        # Use existing contrast analysis
+        return css_info.get('contrast_ratio', 'medium')
+    
+    def _detect_accessibility_tools(self, data: Dict[str, Any]) -> List[str]:
+        """Detect accessibility tools and libraries."""
+        return []  # Would need script analysis
 

@@ -10,7 +10,9 @@ from src.routes.user import user_bp
 from src.routes.analyze import analyze_bp
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
+
+# Use environment variable for secret key or fallback to default
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'asdf#FGSgvasgf$5$WGT')
 
 # Enable CORS for all routes
 CORS(app)
@@ -43,5 +45,16 @@ def serve(path):
 
 
 if __name__ == '__main__':
-    os.environ['GEMINI_API_KEY'] = 'AIzaSyAQ-jKUz6O6zpU4ECBtcjW8L4BnP-TWgLg'
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Get API key from environment variable
+    gemini_api_key = os.environ.get('GEMINI_API_KEY')
+    if not gemini_api_key:
+        print("Warning: GEMINI_API_KEY environment variable not set. Using fallback key.")
+        gemini_api_key = 'AIzaSyAQ-jKUz6O6zpU4ECBtcjW8L4BnP-TWgLg'  # Fallback for development
+    
+    os.environ['GEMINI_API_KEY'] = gemini_api_key
+    
+    # Get port from environment variable for production deployment
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') != 'production'
+    
+    app.run(host='0.0.0.0', port=port, debug=debug)

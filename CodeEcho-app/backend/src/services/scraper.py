@@ -396,10 +396,16 @@ class WebsiteScraper:
 
 # Synchronous wrapper for easier use
 def scrape_website_sync(url: str) -> dict:
-    """Synchronous wrapper for the async scrape_website method."""
-    async def _scrape():
-        async with WebsiteScraper() as scraper:
-            return await scraper.scrape_website(url)
-    
-    return asyncio.run(_scrape())
+    """Synchronous wrapper for the async scrape_website method with fallback."""
+    try:
+        async def _scrape():
+            async with WebsiteScraper() as scraper:
+                return await scraper.scrape_website(url)
+        
+        return asyncio.run(_scrape())
+    except Exception as e:
+        logger.warning(f"Playwright scraper failed, falling back to simple scraper: {str(e)}")
+        # Fallback to simple scraper
+        from .simple_scraper import scrape_website_simple
+        return scrape_website_simple(url)
 

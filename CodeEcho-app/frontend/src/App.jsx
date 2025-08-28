@@ -19,6 +19,7 @@ import {
   FileText,
   Zap
 } from 'lucide-react'
+import config from './config.js'
 import './App.css'
 
 function App() {
@@ -51,7 +52,7 @@ function App() {
         })
       }, 500)
 
-      const response = await fetch('http://localhost:5000/api/analyze-website', {
+      const response = await fetch(`${config.API_BASE_URL}/api/analyze-website`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +83,7 @@ function App() {
     if (!sessionId) return
     
     try {
-      const response = await fetch(`http://localhost:5000/api/download/${sessionId}`)
+      const response = await fetch(`${config.API_BASE_URL}/api/download/${sessionId}`)
       if (response.ok) {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)

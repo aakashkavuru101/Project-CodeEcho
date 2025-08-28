@@ -27,9 +27,14 @@ import FeatureShowcase from './components/FeatureShowcase.jsx'
 import AnalysisHistory from './components/AnalysisHistory.jsx'
 import LiveDashboard from './components/LiveDashboard.jsx'
 import LandingPage from './components/LandingPage.jsx'
+import Header from './components/Header.jsx'
+import { ThemeProvider, useTheme, useLanguage } from './contexts/ThemeContext.jsx'
+import { useTranslation } from './utils/translations.js'
 import './App.css'
 
-function App() {
+function AppContent() {
+  const { language } = useLanguage()
+  const t = useTranslation(language)
   const [url, setUrl] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisResult, setAnalysisResult] = useState(null)
@@ -41,7 +46,7 @@ function App() {
   const analyzeWebsite = async (websiteUrl = null) => {
     const targetUrl = websiteUrl || url;
     if (!targetUrl.trim()) {
-      setError('Please enter a valid URL')
+      setError(t('errorUrlRequired'))
       return
     }
 
@@ -79,10 +84,10 @@ function App() {
         setAnalysisResult(data)
         setSessionId(data.session_id)
       } else {
-        setError(data.message || 'Analysis failed')
+        setError(data.message || t('errorAnalysisFailed'))
       }
     } catch (err) {
-      setError('Failed to connect to the analysis service')
+      setError(t('errorConnection'))
       console.error('Analysis error:', err)
     } finally {
       setIsAnalyzing(false)
@@ -133,8 +138,9 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="container mx-auto px-4 py-6 md:py-8">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="container mx-auto px-4 py-6 md:py-8">
         {/* Enhanced Header */}
         <div className="text-center mb-8 md:mb-12">
           <div className="flex items-center justify-center mb-4">
@@ -142,14 +148,14 @@ function App() {
               <Globe className="h-10 w-10 md:h-12 md:w-12 text-blue-600 mr-3" />
               <Sparkles className="h-4 w-4 text-yellow-500 absolute -top-1 -right-1 animate-pulse" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">CodeEcho</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">{t('title')}</h1>
           </div>
           <div className="max-w-3xl mx-auto space-y-2">
-            <p className="text-lg md:text-xl text-gray-600">
-              AI-powered website analysis with <span className="font-semibold text-blue-600">Ollama</span>
+            <p className="text-lg md:text-xl text-muted-foreground">
+              {t('subtitle')}
             </p>
-            <p className="text-sm md:text-base text-gray-500">
-              Secure, local AI processing • 4 specialized models • Comprehensive analysis
+            <p className="text-sm md:text-base text-muted-foreground">
+              {t('secureSubtitle')}
             </p>
           </div>
           
@@ -164,7 +170,7 @@ function App() {
                   className="rounded-md px-3"
                 >
                   <Zap className="h-4 w-4 mr-2" />
-                  Analyze
+                  {t('analyzeTab')}
                 </Button>
                 <Button
                   variant={currentView === 'dashboard' ? 'default' : 'ghost'}
@@ -173,7 +179,7 @@ function App() {
                   className="rounded-md px-3"
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
-                  Dashboard
+                  {t('dashboardTab')}
                 </Button>
                 <Button
                   variant={currentView === 'history' ? 'default' : 'ghost'}
@@ -182,7 +188,7 @@ function App() {
                   className="rounded-md px-3"
                 >
                   <History className="h-4 w-4 mr-2" />
-                  History
+                  {t('historyTab')}
                 </Button>
                 <Button
                   variant="ghost"
@@ -608,8 +614,16 @@ function App() {
             )}
           </>
         )}
-      </div>
+      </main>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   )
 }
 

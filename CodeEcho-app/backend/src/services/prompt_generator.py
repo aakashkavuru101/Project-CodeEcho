@@ -461,22 +461,56 @@ class PromptGenerator:
     # Fallback methods for when AI generation fails
     
     def _fallback_design_prompt(self, design_analysis: Dict[str, Any]) -> str:
-        """Fallback design prompt when AI generation fails."""
+        """Enhanced fallback design prompt that uses actual analysis data."""
         color_palette = design_analysis.get('color_palette', {})
         typography = design_analysis.get('typography', {})
         layout = design_analysis.get('layout', {})
+        ui_components = design_analysis.get('ui_components', {})
+        design_patterns = design_analysis.get('design_patterns', [])
         
-        return f"""Design a modern, responsive website with the following characteristics:
+        # Extract specific details from analysis
+        primary_colors = color_palette.get('primary_colors', ['#333333', '#ffffff'])
+        color_scheme = color_palette.get('color_scheme', 'professional')
+        font_families = typography.get('font_families', ['sans-serif'])
+        layout_type = layout.get('layout_type', 'modern')
+        
+        # Build detailed prompt based on actual data
+        prompt = f"""## Design System Analysis & Recreation Guide
 
-Visual Style:
-- Color scheme: {color_palette.get('color_scheme', 'professional')} with {color_palette.get('mood', 'neutral')} mood
-- Primary colors: {', '.join(color_palette.get('primary_colors', ['#333333', '#ffffff'])[:3])}
-- Typography: {typography.get('font_type', 'sans-serif')} fonts with {typography.get('typography_strategy', 'consistent')} hierarchy
+### Visual Identity
+**Color Palette:**
+- Primary colors: {', '.join(primary_colors[:5])}
+- Color scheme: {color_scheme} ({color_palette.get('mood', 'balanced')} mood)
+- Background: {color_palette.get('background_color', '#ffffff')}
+- Text colors: {', '.join(color_palette.get('text_colors', ['#000000'])[:3])}
 
-Layout Structure:
-- Layout type: {layout.get('layout_type', 'modern')}
-- Layout pattern: {layout.get('layout_pattern', 'header_footer_layout')}
-- Responsive design: {layout.get('responsive', True)}
+**Typography System:**
+- Primary fonts: {', '.join(font_families[:3])}
+- Typography strategy: {typography.get('typography_strategy', 'hierarchical')}
+- Font pairing: {typography.get('font_pairing', 'complementary')}
+- Readability score: {typography.get('readability_score', 'good')}
+
+### Layout Architecture
+**Structure Type:** {layout_type}
+- Grid system: {layout.get('grid_system', 'flexible')}
+- Layout pattern: {layout.get('layout_pattern', 'header-main-footer')}
+- Content organization: {layout.get('content_organization', 'logical')}
+- Responsive breakpoints: {layout.get('responsive_breakpoints', 'standard')}
+
+### UI Components Detected
+{chr(10).join(f"- {component}: {details}" for component, details in ui_components.items()) if ui_components else "- Standard web components"}
+
+### Design Patterns
+{chr(10).join(f"- {pattern}" for pattern in design_patterns) if design_patterns else "- Modern web design patterns"}
+
+### Implementation Recommendations
+1. Maintain consistent spacing and typography scales
+2. Implement the detected color system with proper contrast ratios
+3. Use CSS Grid/Flexbox for the {layout_type} layout structure
+4. Ensure responsive design across all breakpoints
+5. Recreate the identified UI components with modern CSS/JavaScript"""
+
+        return prompt
 
 UI Components:
 - Include standard web components: navigation, buttons, forms, and content sections
@@ -484,25 +518,46 @@ UI Components:
 - Implement hover states and smooth transitions"""
     
     def _fallback_functionality_prompt(self, functionality_analysis: Dict[str, Any]) -> str:
-        """Fallback functionality prompt when AI generation fails."""
+        """Enhanced fallback functionality prompt using actual analysis data."""
         core_features = functionality_analysis.get('core_features', [])
         user_interactions = functionality_analysis.get('user_interactions', {})
+        navigation_structure = functionality_analysis.get('navigation_structure', {})
+        form_functionality = functionality_analysis.get('form_functionality', {})
+        search_functionality = functionality_analysis.get('search_functionality', {})
+        social_features = functionality_analysis.get('social_features', [])
         
-        return f"""Implement the following core functionality:
+        return f"""## Functionality Analysis & Implementation Guide
 
-Core Features:
-{chr(10).join(f'- {feature}' for feature in core_features) if core_features else '- Basic website functionality'}
+### Core Features Detected
+{chr(10).join(f"- **{feature}**: Implement with full functionality" for feature in core_features) if core_features else "- Standard web functionality"}
 
-User Interactions:
-- Button interactions: {user_interactions.get('button_count', 0)} interactive buttons
-- Navigation links: {user_interactions.get('link_count', 0)} navigation elements
-- Form inputs: {user_interactions.get('input_count', 0)} input fields
-- Interaction complexity: {user_interactions.get('interaction_complexity', 'medium')}
+### User Interaction Patterns  
+**Interactive Elements:**
+- Buttons: {user_interactions.get('button_count', 0)} detected
+- Links: {user_interactions.get('link_count', 0)} detected
+- Input fields: {user_interactions.get('input_count', 0)} detected
+- Complexity level: {user_interactions.get('interaction_complexity', 'medium')}
 
-Navigation:
-- Implement clear navigation structure
-- Include search functionality if needed
-- Ensure intuitive user flows"""
+**Requirements:**
+- Implement hover states and click feedback
+- Ensure keyboard accessibility for all interactive elements
+- Add loading states for async operations
+- Include error handling and validation
+
+### Navigation Architecture
+**Structure:** {navigation_structure.get('navigation_pattern', 'horizontal')} navigation
+- Items: {navigation_structure.get('navigation_items', 0)} main sections
+- Search: {'Yes' if navigation_structure.get('has_search') else 'No'}
+- Breadcrumbs: {'Yes' if navigation_structure.get('has_breadcrumbs') else 'No'}
+
+### Additional Features
+{chr(10).join(f"- {feature}" for feature in social_features) if social_features else "- No additional features detected"}
+
+### Implementation Priorities
+1. Core Features: Implement the {len(core_features)} main features first
+2. Navigation: Build the {navigation_structure.get('navigation_pattern', 'horizontal')} navigation system  
+3. Interactions: Add responsive feedback for all {user_interactions.get('button_count', 0)} interactive elements
+4. Progressive Enhancement: Start with basic functionality, add advanced features"""
     
     def _fallback_technical_prompt(self, technical_analysis: Dict[str, Any]) -> str:
         """Fallback technical prompt when AI generation fails."""

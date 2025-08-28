@@ -62,27 +62,35 @@ def analyze_website():
         # Generate session ID
         session_id = str(uuid.uuid4())
         
-        # Step 1: Scrape the website
+        # Step 1: Scrape the website with retry logic
         logger.info("Step 1: Scraping website...")
-        try:
-            scraped_data = scrape_website_sync(url)
-        except Exception as e:
-            logger.error(f"Scraping failed: {str(e)}")
-            # If scraping fails completely, provide mock data for demo purposes
-            scraped_data = {
-                'url': url,
-                'title': 'Demo Website Analysis',
-                'viewport_info': {'width': 1920, 'height': 1080, 'hasMediaQueries': True, 'isMobile': False, 'isTablet': False},
-                'css_info': {'primaryFont': 'system-ui, sans-serif', 'backgroundColor': '#ffffff', 'textColor': '#000000', 'colors': ['#000000', '#ffffff'], 'fonts': ['system-ui']},
-                'structure_info': {'hasHeader': True, 'hasFooter': True, 'hasNavigation': True, 'hasSidebar': False, 'mainContentArea': True, 'headings': ['h1', 'h2'], 'sections': 3, 'images': 5},
-                'interactive_elements': {'buttons': [{'text': 'Click Me', 'type': 'button'}], 'links': [{'text': 'Home', 'href': url}], 'inputs': []},
-                'navigation_info': {'mainNav': [{'text': 'Home', 'href': url}], 'breadcrumbs': [], 'pagination': False, 'searchBox': False},
-                'forms_info': [],
-                'content_analysis': {'word_count': 500, 'paragraph_count': 10, 'has_hero_section': True, 'content_sections': 3},
-                'technical_info': {'hasJavaScript': True, 'frameworks': {'react': False, 'vue': False}, 'isResponsive': True},
-                'html_content': f'<html><head><title>Demo Analysis</title></head><body><h1>Website: {url}</h1><p>This is a demo analysis.</p></body></html>',
-                'timestamp': 0
-            }
+        scraped_data = None
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Scraping attempt {attempt + 1}/{max_retries} for URL: {url}")
+                scraped_data = scrape_website_sync(url)
+                if scraped_data and scraped_data.get('title'):
+                    logger.info("Scraping successful")
+                    break
+                else:
+                    logger.warning(f"Scraping returned incomplete data on attempt {attempt + 1}")
+            except Exception as e:
+                logger.error(f"Scraping attempt {attempt + 1} failed: {str(e)}")
+                if attempt == max_retries - 1:
+                    return jsonify({
+                        'status': 'error',
+                        'message': f'Failed to scrape website after {max_retries} attempts: {str(e)}',
+                        'error_type': 'scraping_error'
+                    }), 500
+        
+        if not scraped_data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to scrape website - no data returned',
+                'error_type': 'scraping_error'
+            }), 500
         
         # Step 2: Analyze the scraped data
         logger.info("Step 2: Analyzing scraped data...")

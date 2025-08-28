@@ -535,6 +535,11 @@ class PromptGenerator:
 5. Recreate the identified UI components with modern CSS/JavaScript"""
 
         return prompt
+
+UI Components:
+- Include standard web components: navigation, buttons, forms, and content sections
+- Ensure consistent styling and interaction patterns
+- Implement hover states and smooth transitions"""
     
     def _fallback_functionality_prompt(self, functionality_analysis: Dict[str, Any]) -> str:
         """Enhanced fallback functionality prompt using actual analysis data."""

@@ -20,7 +20,8 @@ import {
   Zap,
   Sparkles,
   BarChart3,
-  History
+  History,
+  Bot
 } from 'lucide-react'
 import config from './config.js'
 import FeatureShowcase from './components/FeatureShowcase.jsx'
@@ -317,34 +318,38 @@ function AppContent() {
                       </Alert>
                     )}
 
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
-                      <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
-                        <CheckCircle className="h-5 w-5 mr-2" />
-                        What you'll get:
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                        <div className="flex items-center text-blue-800">
-                          <Palette className="h-4 w-4 mr-2 text-purple-500" />
-                          Design analysis (colors, typography, layout)
-                        </div>
-                        <div className="flex items-center text-blue-800">
-                          <Settings className="h-4 w-4 mr-2 text-green-500" />
-                          Functionality breakdown & user flows
-                        </div>
-                        <div className="flex items-center text-blue-800">
-                          <Code className="h-4 w-4 mr-2 text-orange-500" />
-                          Technical implementation recommendations
-                        </div>
-                        <div className="flex items-center text-blue-800">
-                          <Users className="h-4 w-4 mr-2 text-rose-500" />
-                          Content strategy & UX guidelines
-                        </div>
-                        <div className="flex items-center text-blue-800 md:col-span-2">
-                          <FileText className="h-4 w-4 mr-2 text-blue-500" />
-                          Ready-to-use AI prompts in text and JSON formats
+                      <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-6 rounded-lg border border-gray-200">
+                        <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
+                          <CheckCircle className="h-5 w-5 mr-2" />
+                          What you'll get:
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                          <div className="flex items-center text-blue-800">
+                            <Palette className="h-4 w-4 mr-2 text-purple-500" />
+                            Advanced design analysis (colors, typography, layouts)
+                          </div>
+                          <div className="flex items-center text-blue-800">
+                            <Settings className="h-4 w-4 mr-2 text-green-500" />
+                            Comprehensive functionality breakdown & user flows
+                          </div>
+                          <div className="flex items-center text-blue-800">
+                            <Code className="h-4 w-4 mr-2 text-orange-500" />
+                            Deep technical architecture recommendations
+                          </div>
+                          <div className="flex items-center text-blue-800">
+                            <Users className="h-4 w-4 mr-2 text-rose-500" />
+                            Enhanced content strategy & UX guidelines
+                          </div>
+                          <div className="flex items-center text-blue-800 md:col-span-2">
+                            <FileText className="h-4 w-4 mr-2 text-blue-500" />
+                            Multi-format AI prompts (text, JSON, markdown)
+                          </div>
+                          <div className="flex items-center text-blue-800 md:col-span-2">
+                            <Bot className="h-4 w-4 mr-2 text-purple-500" />
+                            Powered by 8 specialized AI models for maximum accuracy
+                          </div>
                         </div>
                       </div>
-                    </div>
                   </CardContent>
                 </Card>
 

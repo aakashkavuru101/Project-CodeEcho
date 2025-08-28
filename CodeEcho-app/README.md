@@ -45,16 +45,23 @@ git push heroku main
 
 ## 🤖 Ollama Setup
 
-CodeEcho uses Ollama for secure, local AI inference with multiple open-source models.
+CodeEcho uses Ollama for secure, local AI inference with multiple specialized open-source models.
 
 ### Quick Setup
 1. Install Ollama: Visit [ollama.ai](https://ollama.ai)
 2. Pull models:
 ```bash
+# Core models (original)
 ollama pull llama3.1:8b    # Primary: Fast & balanced
 ollama pull qwen2.5:7b     # Reasoning & code
 ollama pull mistral:7b     # Creative content  
 ollama pull gemma2:9b      # Detailed analysis
+
+# Enhanced models (new)
+ollama pull phi3:medium    # Efficient quick tasks
+ollama pull codellama:7b   # Code specialization
+ollama pull neural-chat:7b # Conversational AI
+ollama pull vicuna:7b      # Instruction following
 ```
 3. Start service: `ollama serve`
 
@@ -77,6 +84,10 @@ ollama pull gemma2:9b      # Detailed analysis
 - **Qwen 2.5 7B**: Specialized for reasoning and code generation
 - **Mistral 7B**: Optimized for creative content generation  
 - **Gemma 2 9B**: Best for detailed, comprehensive analysis
+- **Phi3 Medium**: Microsoft's efficient model for quick tasks
+- **CodeLlama 7B**: Specialized for code analysis and generation
+- **Neural-Chat 7B**: Conversational AI for user-focused content
+- **Vicuna 7B**: Excellent instruction following for structured tasks
 
 ## Installation & Setup
 

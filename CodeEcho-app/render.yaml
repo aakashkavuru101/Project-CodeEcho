@@ -1,0 +1,17 @@
+version: 2
+services:
+  - type: web
+    name: codeecho-app
+    runtime: python
+    plan: free
+    repo: https://github.com/aakashkavuru101/Project-CodeEcho
+    rootDir: CodeEcho-app
+    buildCommand: npm run deploy:build
+    startCommand: python backend/src/main.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: GEMINI_API_KEY
+        sync: false  # User needs to set this manually

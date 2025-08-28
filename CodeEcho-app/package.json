@@ -1,0 +1,23 @@
+{
+  "name": "codeecho-app",
+  "version": "1.0.0",
+  "description": "AI-powered website analysis and prompt generation tool",
+  "main": "backend/src/main.py",
+  "scripts": {
+    "build": "cd frontend && npm install --legacy-peer-deps && npm run build && cp -r dist/* ../backend/src/static/",
+    "start": "cd backend && python src/main.py",
+    "dev:backend": "cd backend && python src/main.py",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:backend": "cd backend && pip install -r requirements.txt",
+    "install:frontend": "cd frontend && npm install --legacy-peer-deps",
+    "setup": "npm run install:backend && npm run install:frontend",
+    "deploy:build": "npm run build && echo 'Build complete. Ready for deployment.'"
+  },
+  "keywords": ["ai", "website-analysis", "prompt-generation", "react", "flask"],
+  "author": "CodeEcho Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "python": ">=3.11.0"
+  }
+}

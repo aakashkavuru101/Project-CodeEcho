@@ -162,7 +162,7 @@ function AppContent() {
           {/* Navigation Tabs */}
           <div className="mt-6">
             <div className="flex justify-center">
-              <div className="inline-flex rounded-lg border bg-white p-1">
+              <div className="inline-flex rounded-lg border bg-white dark:bg-gray-800 dark:border-gray-700 p-1">
                 <Button
                   variant={currentView === 'analyze' ? 'default' : 'ghost'}
                   size="sm"
@@ -194,7 +194,7 @@ function AppContent() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setCurrentView('landing')}
-                  className="rounded-md px-3 text-gray-600"
+                  className="rounded-md px-3 text-gray-600 dark:text-gray-300"
                 >
                   Home
                 </Button>

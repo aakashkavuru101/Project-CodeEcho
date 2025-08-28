@@ -140,13 +140,21 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Header />
-      <main className="container mx-auto px-4 py-6 md:py-8">
+      <main className="container mx-auto px-4 py-6 md:py-8" role="main" id="main-content">
+        {/* Skip to content link for screen readers */}
+        <a 
+          href="#main-content" 
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-md"
+        >
+          Skip to main content
+        </a>
+        
         {/* Enhanced Header */}
         <div className="text-center mb-8 md:mb-12">
           <div className="flex items-center justify-center mb-4">
             <div className="relative">
-              <Globe className="h-10 w-10 md:h-12 md:w-12 text-blue-600 mr-3" />
-              <Sparkles className="h-4 w-4 text-yellow-500 absolute -top-1 -right-1 animate-pulse" />
+              <Globe className="h-10 w-10 md:h-12 md:w-12 text-blue-600 mr-3" aria-hidden="true" />
+              <Sparkles className="h-4 w-4 text-yellow-500 absolute -top-1 -right-1 animate-pulse" aria-hidden="true" />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
           </div>
@@ -162,57 +170,71 @@ function AppContent() {
           {/* Navigation Tabs */}
           <div className="mt-6">
             <div className="flex justify-center">
-              <div className="inline-flex rounded-lg border bg-white dark:bg-gray-800 dark:border-gray-700 p-1">
+              <nav 
+                className="inline-flex rounded-lg border bg-white dark:bg-gray-800 dark:border-gray-700 p-1"
+                role="tablist" 
+                aria-label="Main navigation"
+              >
                 <Button
                   variant={currentView === 'analyze' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setCurrentView('analyze')}
-                  className="rounded-md px-3"
+                  className="rounded-md px-3 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                  role="tab"
+                  aria-selected={currentView === 'analyze'}
+                  aria-controls="analyze-panel"
                 >
-                  <Zap className="h-4 w-4 mr-2" />
+                  <Zap className="h-4 w-4 mr-2" aria-hidden="true" />
                   {t('analyzeTab')}
                 </Button>
                 <Button
                   variant={currentView === 'dashboard' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setCurrentView('dashboard')}
-                  className="rounded-md px-3"
+                  className="rounded-md px-3 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                  role="tab"
+                  aria-selected={currentView === 'dashboard'}
+                  aria-controls="dashboard-panel"
                 >
-                  <BarChart3 className="h-4 w-4 mr-2" />
+                  <BarChart3 className="h-4 w-4 mr-2" aria-hidden="true" />
                   {t('dashboardTab')}
                 </Button>
                 <Button
                   variant={currentView === 'history' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setCurrentView('history')}
-                  className="rounded-md px-3"
+                  className="rounded-md px-3 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                  role="tab"
+                  aria-selected={currentView === 'history'}
+                  aria-controls="history-panel"
                 >
-                  <History className="h-4 w-4 mr-2" />
+                  <History className="h-4 w-4 mr-2" aria-hidden="true" />
                   {t('historyTab')}
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setCurrentView('landing')}
-                  className="rounded-md px-3 text-gray-600 dark:text-gray-300"
+                  className="rounded-md px-3 text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                  aria-label="Return to home page"
                 >
                   Home
                 </Button>
-              </div>
+              </nav>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
         {currentView === 'dashboard' && (
-          <div className="space-y-8">
+          <div className="space-y-8" role="tabpanel" id="dashboard-panel" aria-labelledby="dashboard-tab">
             <LiveDashboard />
             <FeatureShowcase />
           </div>
         )}
 
         {currentView === 'history' && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto" role="tabpanel" id="history-panel" aria-labelledby="history-tab">
             <AnalysisHistory onAnalyzeUrl={(url) => {
               setUrl(url);
               setCurrentView('analyze');
@@ -222,13 +244,13 @@ function AppContent() {
         )}
 
         {currentView === 'analyze' && (
-          <>
+          <div role="tabpanel" id="analyze-panel" aria-labelledby="analyze-tab">
             {!analysisResult ? (
               <div className="max-w-3xl mx-auto space-y-8">
                 <Card className="border-2 border-blue-100 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center">
-                      <Zap className="h-5 w-5 mr-2 text-blue-600" />
+                      <Zap className="h-5 w-5 mr-2 text-blue-600" aria-hidden="true" />
                       {t('websiteAnalysis')}
                     </CardTitle>
                     <CardDescription>
@@ -236,7 +258,7 @@ function AppContent() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <form onSubmit={(e) => { e.preventDefault(); analyzeWebsite(); }} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                       <Input
                         type="url"
                         placeholder={t('urlPlaceholder')}
@@ -244,35 +266,42 @@ function AppContent() {
                         onChange={(e) => setUrl(e.target.value)}
                         disabled={isAnalyzing}
                         className="flex-1 text-base"
+                        aria-label="Website URL to analyze"
+                        aria-describedby="url-help"
+                        required
                       />
                       <Button 
-                        onClick={() => analyzeWebsite()} 
+                        type="submit"
                         disabled={isAnalyzing || !url.trim()}
                         className="px-6 sm:px-8"
                         size="lg"
+                        aria-describedby={isAnalyzing ? "analyzing-status" : undefined}
                       >
                         {isAnalyzing ? (
                           <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
                             {t('analyzing')}
                           </>
                         ) : (
                           <>
-                            <Sparkles className="h-4 w-4 mr-2" />
+                            <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
                             {t('analyzeButton')}
                           </>
                         )}
                       </Button>
+                    </form>
+                    <div id="url-help" className="sr-only">
+                      Enter a complete website URL including http:// or https://
                     </div>
 
                     {isAnalyzing && (
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-sm text-gray-600">
+                      <div className="space-y-3" role="status" aria-live="polite" id="analyzing-status">
+                        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                           <span>Analysis Progress</span>
                           <span>{progress}%</span>
                         </div>
-                        <Progress value={progress} className="w-full h-3" />
-                        <p className="text-sm text-gray-500 text-center">
+                        <Progress value={progress} className="w-full h-3" aria-label={`Analysis progress: ${progress}%`} />
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
                           {progress < 30 ? '🔍 Scraping website content...' :
                            progress < 60 ? '🎨 Analyzing design and functionality...' :
                            progress < 90 ? '🤖 Generating AI prompts with Ollama...' :
@@ -282,8 +311,8 @@ function AppContent() {
                     )}
 
                     {error && (
-                      <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
+                      <Alert variant="destructive" role="alert">
+                        <AlertCircle className="h-4 w-4" aria-hidden="true" />
                         <AlertDescription>{error}</AlertDescription>
                       </Alert>
                     )}
@@ -632,18 +661,29 @@ function AppContent() {
 
                 {/* Enhanced Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
-                  <Button onClick={downloadResults} size="lg" className="px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                    <Download className="h-4 w-4 mr-2" />
+                  <Button 
+                    onClick={downloadResults} 
+                    size="lg" 
+                    className="px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    aria-label="Download analysis results as ZIP file"
+                  >
+                    <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                     Download Results
                   </Button>
-                  <Button onClick={resetAnalysis} variant="outline" size="lg" className="px-8 border-2 hover:bg-gray-50">
-                    <Sparkles className="h-4 w-4 mr-2" />
+                  <Button 
+                    onClick={resetAnalysis} 
+                    variant="outline" 
+                    size="lg" 
+                    className="px-8 border-2 hover:bg-gray-50 dark:hover:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    aria-label="Start a new website analysis"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
                     Analyze Another Website
                   </Button>
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </main>
     </div>

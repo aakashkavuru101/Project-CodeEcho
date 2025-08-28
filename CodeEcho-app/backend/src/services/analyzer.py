@@ -199,54 +199,145 @@ class WebsiteAnalyzer:
         return purpose_map.get(website_type, 'unknown')
     
     def _analyze_color_palette(self, colors: List[str]) -> Dict[str, Any]:
-        """Analyze the color palette used in the website."""
+        """Enhanced color palette analysis with more detail."""
         if not colors:
-            return {'primary_colors': [], 'color_scheme': 'unknown', 'mood': 'neutral'}
+            return {
+                'primary_colors': [], 
+                'color_scheme': 'unknown', 
+                'mood': 'neutral',
+                'background_color': '#ffffff',
+                'text_colors': ['#000000'],
+                'accent_colors': []
+            }
         
-        # Simple color analysis (could be enhanced with color theory)
+        # Enhanced color analysis
         unique_colors = list(set(colors))[:10]  # Limit to top 10 unique colors
         
-        # Determine color scheme type
+        # Separate background, text, and accent colors
+        background_colors = [c for c in unique_colors if c.lower() in ['#ffffff', '#fff', 'white', '#f8f9fa', '#f5f5f5']]
+        text_colors = [c for c in unique_colors if c.lower() in ['#000000', '#000', 'black', '#333333', '#2c3e50']]
+        accent_colors = [c for c in unique_colors if c not in background_colors and c not in text_colors]
+        
+        # Determine color scheme type with more sophistication
         color_scheme = 'monochromatic'
-        if len(unique_colors) > 3:
+        mood = self._infer_color_mood(unique_colors)
+        
+        if len(unique_colors) > 5:
+            color_scheme = 'colorful'
+        elif len(unique_colors) > 3:
             color_scheme = 'varied'
         elif len(unique_colors) > 1:
             color_scheme = 'complementary'
         
         return {
             'primary_colors': unique_colors,
+            'background_color': background_colors[0] if background_colors else '#ffffff',
+            'text_colors': text_colors or ['#000000'],
+            'accent_colors': accent_colors[:5],  # Top 5 accent colors
             'color_scheme': color_scheme,
             'total_colors_used': len(colors),
-            'mood': self._infer_color_mood(unique_colors)
+            'unique_colors_count': len(unique_colors),
+            'mood': mood,
+            'contrast_ratio': self._estimate_contrast_ratio(background_colors, text_colors)
         }
     
+    def _estimate_contrast_ratio(self, background_colors: List[str], text_colors: List[str]) -> str:
+        """Estimate contrast ratio for accessibility."""
+        if not background_colors or not text_colors:
+            return 'unknown'
+        
+        # Simple heuristic based on color combinations
+        bg = background_colors[0].lower()
+        text = text_colors[0].lower()
+        
+        light_backgrounds = ['#ffffff', '#fff', 'white', '#f8f9fa', '#f5f5f5']
+        dark_texts = ['#000000', '#000', 'black', '#333333', '#2c3e50']
+        
+        if bg in light_backgrounds and text in dark_texts:
+            return 'high'
+        elif bg not in light_backgrounds and text not in dark_texts:
+            return 'low'
+        else:
+            return 'medium'
+    
     def _analyze_typography(self, fonts: List[str], css_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze typography choices and hierarchy."""
+        """Enhanced typography analysis with detailed categorization."""
         if not fonts:
-            return {'primary_font': 'default', 'font_strategy': 'system_default'}
+            return {
+                'primary_font': 'default', 
+                'font_families': ['system-ui'],
+                'font_type': 'sans-serif',
+                'font_strategy': 'system_default',
+                'typography_strategy': 'basic',
+                'readability_score': 'good',
+                'font_pairing': 'none'
+            }
         
         primary_font = css_info.get('primaryFont', fonts[0] if fonts else 'default')
         
-        # Classify font types
-        serif_indicators = ['serif', 'times', 'georgia', 'garamond']
-        sans_serif_indicators = ['sans', 'arial', 'helvetica', 'roboto', 'open sans']
+        # Enhanced font classification
+        serif_indicators = ['serif', 'times', 'georgia', 'garamond', 'baskerville', 'palatino']
+        sans_serif_indicators = ['sans', 'arial', 'helvetica', 'roboto', 'open sans', 'lato', 'montserrat']
+        monospace_indicators = ['monospace', 'courier', 'menlo', 'monaco', 'consolas']
         
-        font_type = 'unknown'
+        font_types = []
         for font in fonts:
             font_lower = font.lower()
             if any(indicator in font_lower for indicator in serif_indicators):
-                font_type = 'serif'
-                break
+                font_types.append('serif')
             elif any(indicator in font_lower for indicator in sans_serif_indicators):
-                font_type = 'sans-serif'
-                break
+                font_types.append('sans-serif')
+            elif any(indicator in font_lower for indicator in monospace_indicators):
+                font_types.append('monospace')
+            else:
+                font_types.append('unknown')
+        
+        primary_type = font_types[0] if font_types else 'sans-serif'
+        font_variety = len(set(fonts))
+        
+        # Determine typography strategy
+        typography_strategy = 'basic'
+        if font_variety == 1:
+            typography_strategy = 'minimal'
+        elif font_variety == 2:
+            typography_strategy = 'paired'
+        elif font_variety > 2:
+            typography_strategy = 'varied'
+        
+        # Font pairing analysis
+        font_pairing = 'none'
+        if len(set(font_types)) > 1:
+            if 'serif' in font_types and 'sans-serif' in font_types:
+                font_pairing = 'serif_sans_mix'
+            else:
+                font_pairing = 'complementary'
         
         return {
             'primary_font': primary_font,
-            'font_type': font_type,
-            'font_variety': len(set(fonts)),
-            'typography_strategy': 'varied' if len(set(fonts)) > 2 else 'consistent'
+            'font_families': fonts[:5],  # Top 5 fonts
+            'font_type': primary_type,
+            'font_types_used': list(set(font_types)),
+            'font_variety': font_variety,
+            'typography_strategy': typography_strategy,
+            'font_pairing': font_pairing,
+            'readability_score': self._assess_readability(fonts, font_types)
         }
+    
+    def _assess_readability(self, fonts: List[str], font_types: List[str]) -> str:
+        """Assess typography readability."""
+        # Simple heuristics for readability
+        if not fonts:
+            return 'unknown'
+        
+        readable_fonts = ['arial', 'helvetica', 'roboto', 'open sans', 'lato', 'georgia']
+        primary_font = fonts[0].lower()
+        
+        if any(font in primary_font for font in readable_fonts):
+            return 'excellent'
+        elif 'sans-serif' in font_types or 'serif' in font_types:
+            return 'good'
+        else:
+            return 'fair'
     
     def _analyze_layout_structure(self, structure: Dict[str, Any], viewport: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze the layout structure and organization."""

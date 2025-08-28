@@ -32,6 +32,7 @@ class PromptGenerator:
         }
         
         self.client = ollama.Client()
+        self._prompt_cache = {}  # Initialize cache
         self._ensure_models_available()
     
     def _ensure_models_available(self):
@@ -53,7 +54,17 @@ class PromptGenerator:
             logger.warning(f"Could not connect to Ollama or check models: {str(e)}")
     
     def _generate_with_fallback(self, prompt: str, task_type: str = 'default') -> str:
-        """Generate content with model fallback strategy."""
+        """Generate content with model fallback strategy and caching."""
+        # Check cache first
+        prompt_hash = str(hash(prompt + task_type))
+        if hasattr(self, '_prompt_cache') and prompt_hash in self._prompt_cache:
+            logger.info(f"Using cached result for {task_type}")
+            return self._prompt_cache[prompt_hash]
+        
+        # Initialize cache if not exists
+        if not hasattr(self, '_prompt_cache'):
+            self._prompt_cache = {}
+        
         # Determine model preference based on task type
         preferred_model_key = self.task_models.get(task_type, 'default')
         preferred_model = self.models[preferred_model_key]
@@ -66,20 +77,27 @@ class PromptGenerator:
             if model not in model_order:
                 model_order.append(model)
         
-        for model_name in model_order:
+        for i, model_name in enumerate(model_order):
             try:
-                logger.info(f"Attempting generation with model: {model_name}")
+                logger.info(f"Attempting generation with model: {model_name} for {task_type} (attempt {i+1})")
                 response = self.client.generate(
                     model=model_name,
                     prompt=prompt,
                     options={
                         'temperature': 0.7,
                         'top_p': 0.9,
-                        'max_tokens': 2048
+                        'num_predict': 1500  # Limit for better performance
                     }
                 )
-                logger.info(f"Successfully generated content with model: {model_name}")
-                return response['response']
+                
+                result = response.get('response', '').strip()
+                if result and len(result) > 50:  # Ensure meaningful content
+                    # Cache successful result
+                    self._prompt_cache[prompt_hash] = result
+                    logger.info(f"Successfully generated content with model: {model_name}")
+                    return result
+                else:
+                    logger.warning(f"Model {model_name} returned insufficient content")
                 
             except Exception as e:
                 logger.warning(f"Model {model_name} failed: {str(e)}")
@@ -88,6 +106,12 @@ class PromptGenerator:
         # If all models fail, return fallback content
         logger.error("All Ollama models failed, using fallback content")
         return f"Error: Unable to generate AI content. All models failed. Task: {task_type}"
+    
+    def clear_cache(self):
+        """Clear the prompt generation cache."""
+        if hasattr(self, '_prompt_cache'):
+            self._prompt_cache.clear()
+            logger.info("Prompt cache cleared")
         
     def generate_comprehensive_prompt(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
         """

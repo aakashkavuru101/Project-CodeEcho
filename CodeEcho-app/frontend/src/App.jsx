@@ -229,17 +229,17 @@ function AppContent() {
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <Zap className="h-5 w-5 mr-2 text-blue-600" />
-                      Website Analysis
+                      {t('websiteAnalysis')}
                     </CardTitle>
                     <CardDescription>
-                      Enter a website URL to extract design patterns, functionality, and generate comprehensive AI prompts
+                      {t('analysisDescription')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                       <Input
                         type="url"
-                        placeholder="https://example.com"
+                        placeholder={t('urlPlaceholder')}
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                         disabled={isAnalyzing}
@@ -254,12 +254,12 @@ function AppContent() {
                         {isAnalyzing ? (
                           <>
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Analyzing...
+                            {t('analyzing')}
                           </>
                         ) : (
                           <>
                             <Sparkles className="h-4 w-4 mr-2" />
-                            Analyze
+                            {t('analyzeButton')}
                           </>
                         )}
                       </Button>
@@ -418,13 +418,44 @@ function AppContent() {
                             </div>
                           </div>
                           <div>
-                            <h4 className="font-semibold mb-2">Core Features</h4>
-                            <div className="flex flex-wrap gap-1">
+                            <h4 className="font-semibold mb-3">Core Features Detected</h4>
+                            <div className="space-y-2">
                               {analysisResult.analysis.summary.core_features.map((feature, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {feature.replace('_', ' ')}
-                                </Badge>
+                                <div key={index} className="flex items-center p-2 bg-blue-50 dark:bg-blue-950 rounded-md">
+                                  <CheckCircle className="h-4 w-4 mr-2 text-blue-600" />
+                                  <span className="text-sm font-medium capitalize">
+                                    {feature.replace(/_/g, ' ')}
+                                  </span>
+                                </div>
                               ))}
+                              {analysisResult.analysis.summary.core_features.length === 0 && (
+                                <p className="text-sm text-muted-foreground italic">No specific features detected</p>
+                              )}
+                            </div>
+                            
+                            {/* Additional Feature Details */}
+                            <div className="mt-4">
+                              <h5 className="font-medium mb-2 text-sm">Implementation Insights</h5>
+                              <div className="space-y-1 text-xs">
+                                <div className="flex justify-between">
+                                  <span>Interactive Elements:</span>
+                                  <Badge variant="outline">
+                                    {analysisResult.analysis.functionality_analysis.user_interactions?.interaction_complexity || 'Medium'}
+                                  </Badge>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Navigation Complexity:</span>
+                                  <Badge variant="outline">
+                                    {analysisResult.analysis.functionality_analysis.navigation_structure?.navigation_items > 5 ? 'Complex' : 'Simple'}
+                                  </Badge>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Content Type:</span>
+                                  <Badge variant="outline">
+                                    {analysisResult.analysis.website_info?.primary_purpose || 'Standard'}
+                                  </Badge>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>

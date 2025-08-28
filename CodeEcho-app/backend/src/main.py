@@ -45,13 +45,8 @@ def serve(path):
 
 
 if __name__ == '__main__':
-    # Get API key from environment variable
-    gemini_api_key = os.environ.get('GEMINI_API_KEY')
-    if not gemini_api_key:
-        print("Warning: GEMINI_API_KEY environment variable not set. Using fallback key.")
-        gemini_api_key = 'AIzaSyAQ-jKUz6O6zpU4ECBtcjW8L4BnP-TWgLg'  # Fallback for development
-    
-    os.environ['GEMINI_API_KEY'] = gemini_api_key
+    # Ollama runs locally, no API key needed
+    # Remove all Gemini API key references for security
     
     # Get port from environment variable for production deployment
     port = int(os.environ.get('PORT', 5000))

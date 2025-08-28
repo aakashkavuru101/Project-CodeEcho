@@ -445,6 +445,156 @@ class WebsiteAnalyzer:
         
         return patterns
     
+    def _identify_design_patterns_advanced(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Advanced design pattern identification with detailed analysis and modern pattern recognition."""
+        content = data.get('content_analysis', {})
+        structure = data.get('structure_info', {})
+        css_info = data.get('css_info', {})
+        interactive = data.get('interactive_elements', {})
+        
+        # Basic patterns from the original method
+        basic_patterns = []
+        if content.get('has_hero_section', False):
+            basic_patterns.append('hero_section')
+        if content.get('has_testimonials', False):
+            basic_patterns.append('testimonials')
+        if content.get('has_pricing', False):
+            basic_patterns.append('pricing_table')
+        if content.get('has_gallery', False):
+            basic_patterns.append('image_gallery')
+        if structure.get('hasNavigation', False):
+            basic_patterns.append('navigation_menu')
+        
+        # Advanced pattern analysis
+        layout_patterns = self._analyze_layout_patterns(structure, css_info)
+        navigation_patterns = self._analyze_navigation_patterns(structure, interactive)
+        content_patterns = self._analyze_content_patterns(content, structure)
+        interaction_patterns = self._analyze_interaction_patterns_basic(interactive)
+        modern_patterns = self._detect_modern_design_patterns(data)
+        
+        return {
+            'basic_patterns': basic_patterns,
+            'layout_patterns': layout_patterns,
+            'navigation_patterns': navigation_patterns,
+            'content_patterns': content_patterns,
+            'interaction_patterns': interaction_patterns,
+            'modern_patterns': modern_patterns,
+            'pattern_complexity': self._assess_pattern_complexity(basic_patterns),
+            'design_sophistication': self._rate_design_sophistication(data)
+        }
+    
+    def _analyze_layout_patterns(self, structure: Dict[str, Any], css_info: Dict[str, Any]) -> List[str]:
+        """Analyze layout-specific patterns."""
+        patterns = []
+        
+        # Grid and flexbox patterns
+        if css_info.get('has_grid', False):
+            patterns.append('css_grid_layout')
+        if css_info.get('has_flexbox', False):
+            patterns.append('flexbox_layout')
+        
+        # Common layout structures
+        if structure.get('hasHeader', False) and structure.get('hasFooter', False):
+            patterns.append('header_footer_layout')
+        if structure.get('hasSidebar', False):
+            patterns.append('sidebar_layout')
+        
+        return patterns
+    
+    def _analyze_navigation_patterns(self, structure: Dict[str, Any], interactive: Dict[str, Any]) -> List[str]:
+        """Analyze navigation-specific patterns."""
+        patterns = []
+        
+        # Navigation types
+        if len(interactive.get('links', [])) > 5:
+            patterns.append('complex_navigation')
+        if structure.get('hasBreadcrumbs', False):
+            patterns.append('breadcrumb_navigation')
+        if structure.get('hasDropdown', False):
+            patterns.append('dropdown_navigation')
+        
+        return patterns
+    
+    def _analyze_content_patterns(self, content: Dict[str, Any], structure: Dict[str, Any]) -> List[str]:
+        """Analyze content organization patterns."""
+        patterns = []
+        
+        # Content organization
+        if content.get('has_cards', False):
+            patterns.append('card_based_layout')
+        if content.get('has_tabs', False):
+            patterns.append('tabbed_content')
+        if content.get('has_accordion', False):
+            patterns.append('accordion_content')
+        if structure.get('hasArticles', False):
+            patterns.append('article_layout')
+        
+        return patterns
+    
+    def _analyze_interaction_patterns_basic(self, interactive: Dict[str, Any]) -> List[str]:
+        """Analyze interaction patterns."""
+        patterns = []
+        
+        # Interaction types
+        button_count = len(interactive.get('buttons', []))
+        if button_count > 3:
+            patterns.append('button_heavy_interface')
+        if interactive.get('has_forms', False):
+            patterns.append('form_interactions')
+        if interactive.get('has_modals', False):
+            patterns.append('modal_interactions')
+        
+        return patterns
+    
+    def _detect_modern_design_patterns(self, data: Dict[str, Any]) -> List[str]:
+        """Detect modern design patterns and trends."""
+        patterns = []
+        css_info = data.get('css_info', {})
+        
+        # Modern CSS features
+        if css_info.get('has_animations', False):
+            patterns.append('micro_animations')
+        if css_info.get('has_gradients', False):
+            patterns.append('gradient_backgrounds')
+        if css_info.get('has_shadows', False):
+            patterns.append('depth_shadows')
+        if css_info.get('has_border_radius', False):
+            patterns.append('rounded_corners')
+        
+        return patterns
+    
+    def _assess_pattern_complexity(self, patterns: List[str]) -> str:
+        """Assess the complexity level of design patterns."""
+        pattern_count = len(patterns)
+        if pattern_count <= 2:
+            return 'simple'
+        elif pattern_count <= 4:
+            return 'moderate'
+        else:
+            return 'complex'
+    
+    def _rate_design_sophistication(self, data: Dict[str, Any]) -> str:
+        """Rate the overall design sophistication."""
+        css_info = data.get('css_info', {})
+        features = []
+        
+        if css_info.get('has_custom_fonts', False):
+            features.append('typography')
+        if css_info.get('has_animations', False):
+            features.append('animations')
+        if css_info.get('has_responsive', False):
+            features.append('responsive')
+        if css_info.get('has_accessibility', False):
+            features.append('accessibility')
+        
+        sophistication_score = len(features)
+        if sophistication_score >= 3:
+            return 'high'
+        elif sophistication_score >= 2:
+            return 'medium'
+        else:
+            return 'basic'
+    
     def _identify_core_features(self, data: Dict[str, Any]) -> List[str]:
         """Identify the core features of the website."""
         features = []

@@ -25,7 +25,7 @@ An intelligent web application that analyzes any website and generates comprehen
 ### Backend
 - **Flask**: Python web framework
 - **Playwright**: Web scraping and browser automation
-- **OpenAI API**: AI-powered prompt generation
+- **Google Gemini API**: AI-powered prompt generation
 - **BeautifulSoup**: HTML parsing and analysis
 
 ### Frontend

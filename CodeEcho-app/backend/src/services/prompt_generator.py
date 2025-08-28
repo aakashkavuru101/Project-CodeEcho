@@ -4,7 +4,7 @@ AI-driven prompt generation service for creating comprehensive prompts from webs
 import json
 import os
 from typing import Dict, Any, List
-from openai import OpenAI
+import google.generativeai as genai
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -12,10 +12,8 @@ logger = logging.getLogger(__name__)
 
 class PromptGenerator:
     def __init__(self):
-        self.client = OpenAI(
-            api_key=os.getenv('OPENAI_API_KEY'),
-            base_url=os.getenv('OPENAI_API_BASE')
-        )
+        self.api_key = os.getenv('GEMINI_API_KEY', 'AIzaSyAQ-jKUz6O6zpU4ECBtcjW8L4BnP-TWgLg')
+        genai.configure(api_key=self.api_key)
         
     def generate_comprehensive_prompt(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -95,16 +93,10 @@ class PromptGenerator:
         """
         
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4.1-mini",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                max_tokens=1500,
-                temperature=0.7
-            )
-            return response.choices[0].message.content
+            model = genai.GenerativeModel('gemini-pro')
+            prompt = f"SYSTEM: {system_prompt}\nUSER: {user_prompt}"
+            response = model.generate_content(prompt)
+            return response.text
         except Exception as e:
             logger.error(f"Error generating design prompt: {str(e)}")
             return self._fallback_design_prompt(design_analysis)
@@ -138,16 +130,10 @@ class PromptGenerator:
         """
         
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4.1-mini",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                max_tokens=1500,
-                temperature=0.7
-            )
-            return response.choices[0].message.content
+            model = genai.GenerativeModel('gemini-pro')
+            prompt = f"SYSTEM: {system_prompt}\nUSER: {user_prompt}"
+            response = model.generate_content(prompt)
+            return response.text
         except Exception as e:
             logger.error(f"Error generating functionality prompt: {str(e)}")
             return self._fallback_functionality_prompt(functionality_analysis)
@@ -180,16 +166,10 @@ class PromptGenerator:
         """
         
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4.1-mini",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                max_tokens=1500,
-                temperature=0.7
-            )
-            return response.choices[0].message.content
+            model = genai.GenerativeModel('gemini-pro')
+            prompt = f"SYSTEM: {system_prompt}\nUSER: {user_prompt}"
+            response = model.generate_content(prompt)
+            return response.text
         except Exception as e:
             logger.error(f"Error generating technical prompt: {str(e)}")
             return self._fallback_technical_prompt(technical_analysis)
@@ -221,16 +201,10 @@ class PromptGenerator:
         """
         
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4.1-mini",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                max_tokens=1500,
-                temperature=0.7
-            )
-            return response.choices[0].message.content
+            model = genai.GenerativeModel('gemini-pro')
+            prompt = f"SYSTEM: {system_prompt}\nUSER: {user_prompt}"
+            response = model.generate_content(prompt)
+            return response.text
         except Exception as e:
             logger.error(f"Error generating content prompt: {str(e)}")
             return self._fallback_content_prompt(content_analysis)
@@ -263,16 +237,10 @@ class PromptGenerator:
         """
         
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4.1-mini",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                max_tokens=1500,
-                temperature=0.7
-            )
-            return response.choices[0].message.content
+            model = genai.GenerativeModel('gemini-pro')
+            prompt = f"SYSTEM: {system_prompt}\nUSER: {user_prompt}"
+            response = model.generate_content(prompt)
+            return response.text
         except Exception as e:
             logger.error(f"Error generating UX prompt: {str(e)}")
             return self._fallback_ux_prompt(ux_analysis)

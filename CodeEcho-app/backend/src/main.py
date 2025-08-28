@@ -43,4 +43,5 @@ def serve(path):
 
 
 if __name__ == '__main__':
+    os.environ['GEMINI_API_KEY'] = 'AIzaSyAQ-jKUz6O6zpU4ECBtcjW8L4BnP-TWgLg'
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -13,26 +13,44 @@ logger = logging.getLogger(__name__)
 
 class PromptGenerator:
     def __init__(self):
-        # Ollama model configuration with fallback strategy
+        # Ollama model configuration with enhanced multi-modal strategy
         self.models = {
             'primary': 'llama3.1:8b',      # Fast, balanced model for general tasks
             'reasoning': 'qwen2.5:7b',     # Excellent for reasoning and code generation
             'creative': 'mistral:7b',      # Good for creative content generation
-            'detailed': 'gemma2:9b'        # Best for detailed, comprehensive responses
+            'detailed': 'gemma2:9b',       # Best for detailed, comprehensive responses
+            'efficient': 'phi3:medium',    # Microsoft's efficient model for quick tasks
+            'code': 'codellama:7b',       # Specialized for code analysis and generation
+            'conversational': 'neural-chat:7b',  # Conversational AI for user-focused content
+            'instruction': 'vicuna:7b'     # Excellent instruction following for structured tasks
         }
         
-        # Model selection strategy based on task type
+        # Enhanced model selection strategy based on task type and complexity
         self.task_models = {
-            'design': 'creative',      # Creative tasks benefit from Mistral
+            'design': 'creative',          # Creative tasks benefit from Mistral
             'functionality': 'reasoning',  # Logic and reasoning tasks for Qwen
-            'technical': 'reasoning',      # Technical implementation needs reasoning
-            'content': 'creative',         # Content strategy benefits from creativity
-            'ux': 'detailed',             # UX needs detailed analysis
+            'technical': 'code',          # Technical implementation for CodeLlama
+            'content': 'conversational',   # Content strategy for Neural-Chat
+            'ux': 'detailed',             # UX needs detailed analysis from Gemma
+            'analysis': 'reasoning',       # Analysis tasks for Qwen
+            'code_generation': 'code',     # Code tasks for CodeLlama
+            'user_guidance': 'conversational',  # User-facing content for Neural-Chat
+            'structured_output': 'instruction',  # Structured tasks for Vicuna
+            'quick_tasks': 'efficient',    # Quick tasks for Phi3
             'default': 'primary'          # Default to balanced Llama
+        }
+        
+        # Multi-modal task routing for complex analyses
+        self.complex_task_routing = {
+            'comprehensive_analysis': ['reasoning', 'detailed', 'creative'],
+            'technical_deep_dive': ['code', 'reasoning', 'detailed'],
+            'user_experience_focus': ['conversational', 'creative', 'detailed'],
+            'rapid_prototyping': ['efficient', 'code', 'primary']
         }
         
         self.client = ollama.Client()
         self._prompt_cache = {}  # Initialize cache
+        self._model_performance_stats = {}  # Track model performance
         self._ensure_models_available()
     
     def _ensure_models_available(self):
@@ -53,59 +71,282 @@ class PromptGenerator:
         except Exception as e:
             logger.warning(f"Could not connect to Ollama or check models: {str(e)}")
     
-    def _generate_with_fallback(self, prompt: str, task_type: str = 'default') -> str:
-        """Generate content with model fallback strategy and caching."""
+    def _generate_with_fallback(self, prompt: str, task_type: str = 'default', use_multi_modal: bool = False) -> str:
+        """Generate content with enhanced multi-modal strategy, model fallback, and performance tracking."""
         # Check cache first
-        prompt_hash = str(hash(prompt + task_type))
+        prompt_hash = str(hash(prompt + task_type + str(use_multi_modal)))
         if hasattr(self, '_prompt_cache') and prompt_hash in self._prompt_cache:
             logger.info(f"Using cached result for {task_type}")
             return self._prompt_cache[prompt_hash]
         
-        # Initialize cache if not exists
+        # Initialize cache and stats if not exists
         if not hasattr(self, '_prompt_cache'):
             self._prompt_cache = {}
+        if not hasattr(self, '_model_performance_stats'):
+            self._model_performance_stats = {}
         
-        # Determine model preference based on task type
+        # Multi-modal approach for complex tasks
+        if use_multi_modal and task_type in self.complex_task_routing:
+            return self._generate_multi_modal(prompt, task_type, prompt_hash)
+        
+        # Single model approach with enhanced fallback
         preferred_model_key = self.task_models.get(task_type, 'default')
         preferred_model = self.models[preferred_model_key]
         
-        # Try models in order of preference
-        model_order = [preferred_model]
-        
-        # Add remaining models as fallbacks
-        for model in self.models.values():
-            if model not in model_order:
-                model_order.append(model)
+        # Enhanced model order based on task type and performance stats
+        model_order = self._get_optimal_model_order(preferred_model, task_type)
         
         for i, model_name in enumerate(model_order):
             try:
                 logger.info(f"Attempting generation with model: {model_name} for {task_type} (attempt {i+1})")
+                
+                # Enhanced generation parameters based on task type
+                generation_params = self._get_generation_parameters(task_type)
+                
                 response = self.client.generate(
                     model=model_name,
                     prompt=prompt,
-                    options={
-                        'temperature': 0.7,
-                        'top_p': 0.9,
-                        'num_predict': 1500  # Limit for better performance
-                    }
+                    options=generation_params
                 )
                 
                 result = response.get('response', '').strip()
-                if result and len(result) > 50:  # Ensure meaningful content
-                    # Cache successful result
+                
+                # Enhanced content validation
+                if self._validate_generated_content(result, task_type):
+                    # Cache successful result and update performance stats
                     self._prompt_cache[prompt_hash] = result
+                    self._update_performance_stats(model_name, task_type, True)
                     logger.info(f"Successfully generated content with model: {model_name}")
                     return result
                 else:
-                    logger.warning(f"Model {model_name} returned insufficient content")
+                    logger.warning(f"Model {model_name} returned insufficient or invalid content")
+                    self._update_performance_stats(model_name, task_type, False)
                 
             except Exception as e:
                 logger.warning(f"Model {model_name} failed: {str(e)}")
+                self._update_performance_stats(model_name, task_type, False)
                 continue
         
-        # If all models fail, return fallback content
-        logger.error("All Ollama models failed, using fallback content")
-        return f"Error: Unable to generate AI content. All models failed. Task: {task_type}"
+        # Enhanced fallback content
+        logger.error("All models failed, using enhanced fallback content")
+        return self._generate_enhanced_fallback(task_type, prompt)
+    
+    def _generate_multi_modal(self, prompt: str, task_type: str, prompt_hash: str) -> str:
+        """Generate content using multiple models for enhanced quality."""
+        model_keys = self.complex_task_routing.get(task_type, ['primary'])
+        results = []
+        
+        for model_key in model_keys[:2]:  # Limit to 2 models for performance
+            model_name = self.models.get(model_key, self.models['primary'])
+            try:
+                logger.info(f"Multi-modal generation with {model_name} for {task_type}")
+                
+                response = self.client.generate(
+                    model=model_name,
+                    prompt=prompt,
+                    options=self._get_generation_parameters(task_type)
+                )
+                
+                result = response.get('response', '').strip()
+                if self._validate_generated_content(result, task_type):
+                    results.append(result)
+                    
+            except Exception as e:
+                logger.warning(f"Multi-modal model {model_name} failed: {str(e)}")
+                continue
+        
+        if results:
+            # Combine and enhance results from multiple models
+            combined_result = self._combine_multi_modal_results(results, task_type)
+            self._prompt_cache[prompt_hash] = combined_result
+            return combined_result
+        else:
+            # Fallback to single model approach
+            return self._generate_with_fallback(prompt, task_type, use_multi_modal=False)
+    
+    def _get_optimal_model_order(self, preferred_model: str, task_type: str) -> List[str]:
+        """Get optimal model order based on performance stats and task type."""
+        # Start with preferred model
+        model_order = [preferred_model]
+        
+        # Add high-performing models for this task type
+        if hasattr(self, '_model_performance_stats'):
+            task_stats = self._model_performance_stats.get(task_type, {})
+            sorted_models = sorted(task_stats.items(), key=lambda x: x[1].get('success_rate', 0), reverse=True)
+            for model_name, _ in sorted_models:
+                if model_name not in model_order:
+                    model_order.append(model_name)
+        
+        # Add remaining models as final fallbacks
+        for model in self.models.values():
+            if model not in model_order:
+                model_order.append(model)
+        
+        return model_order
+    
+    def _get_generation_parameters(self, task_type: str) -> Dict[str, Any]:
+        """Get optimized generation parameters based on task type."""
+        base_params = {
+            'temperature': 0.7,
+            'top_p': 0.9,
+            'num_predict': 1500
+        }
+        
+        # Task-specific parameter optimization
+        if task_type in ['technical', 'code_generation']:
+            base_params.update({
+                'temperature': 0.3,  # Lower temperature for more precise technical content
+                'top_p': 0.8,
+                'num_predict': 2000
+            })
+        elif task_type in ['creative', 'design']:
+            base_params.update({
+                'temperature': 0.8,  # Higher temperature for more creative content
+                'top_p': 0.95,
+                'num_predict': 1800
+            })
+        elif task_type in ['analysis', 'detailed']:
+            base_params.update({
+                'temperature': 0.5,  # Balanced temperature for analytical content
+                'top_p': 0.9,
+                'num_predict': 2500
+            })
+        
+        return base_params
+    
+    def _validate_generated_content(self, content: str, task_type: str) -> bool:
+        """Enhanced content validation based on task type."""
+        if not content or len(content) < 50:
+            return False
+        
+        # Task-specific validation
+        if task_type == 'technical' and 'implementation' not in content.lower():
+            return False
+        elif task_type == 'design' and 'design' not in content.lower():
+            return False
+        elif task_type == 'ux' and 'user' not in content.lower():
+            return False
+        
+        # General quality checks
+        if content.count('Error:') > 0 or content.count('failed') > 2:
+            return False
+        
+        return True
+    
+    def _update_performance_stats(self, model_name: str, task_type: str, success: bool):
+        """Update model performance statistics."""
+        if task_type not in self._model_performance_stats:
+            self._model_performance_stats[task_type] = {}
+        
+        if model_name not in self._model_performance_stats[task_type]:
+            self._model_performance_stats[task_type][model_name] = {
+                'attempts': 0,
+                'successes': 0,
+                'success_rate': 0.0
+            }
+        
+        stats = self._model_performance_stats[task_type][model_name]
+        stats['attempts'] += 1
+        if success:
+            stats['successes'] += 1
+        stats['success_rate'] = stats['successes'] / stats['attempts']
+    
+    def _combine_multi_modal_results(self, results: List[str], task_type: str) -> str:
+        """Combine results from multiple models."""
+        if len(results) == 1:
+            return results[0]
+        
+        # For now, use the longest, most detailed result
+        # In future versions, could implement sophisticated merging
+        return max(results, key=len)
+    
+    def _generate_enhanced_fallback(self, task_type: str, original_prompt: str) -> str:
+        """Generate enhanced fallback content when all models fail."""
+        fallback_templates = {
+            'design': """## Design Requirements
+            
+Based on the analyzed website, create a modern, user-friendly design with the following considerations:
+
+**Visual Design:**
+- Implement a clean, contemporary aesthetic
+- Use a balanced color palette that reflects the brand personality
+- Employ modern typography with good readability
+- Create clear visual hierarchy to guide user attention
+
+**Layout & Structure:**
+- Design responsive layouts that work across all devices
+- Implement intuitive navigation patterns
+- Use appropriate spacing and white space
+- Create consistent component patterns
+
+**User Experience:**
+- Focus on usability and accessibility
+- Implement clear call-to-action elements
+- Design for mobile-first approach
+- Ensure fast loading and smooth interactions""",
+            
+            'technical': """## Technical Implementation Guide
+            
+**Frontend Technologies:**
+- Modern JavaScript framework (React, Vue, or Angular)
+- Responsive CSS framework (Tailwind CSS or Bootstrap)
+- Build tools and bundlers (Vite, Webpack)
+
+**Backend Requirements:**
+- RESTful API design
+- Database integration
+- Authentication and security
+- Performance optimization
+
+**Development Best Practices:**
+- Clean, maintainable code structure
+- Testing framework implementation
+- Version control with Git
+- Deployment automation""",
+            
+            'functionality': """## Functionality Requirements
+            
+**Core Features:**
+- User authentication and authorization
+- Content management system
+- Search and filtering capabilities
+- Responsive user interface
+
+**User Interactions:**
+- Intuitive navigation flow
+- Form handling and validation
+- Interactive elements and feedback
+- Error handling and loading states
+
+**Business Logic:**
+- Data processing and management
+- User workflow optimization
+- Integration with third-party services
+- Analytics and tracking implementation""",
+            
+            'ux': """## User Experience Guidelines
+            
+**User-Centered Design:**
+- Research target audience needs and behaviors
+- Create user personas and journey maps
+- Design intuitive information architecture
+- Implement accessibility best practices
+
+**Interaction Design:**
+- Clear visual feedback for all actions
+- Consistent interaction patterns
+- Efficient task completion flows
+- Error prevention and recovery
+
+**Usability Optimization:**
+- Minimize cognitive load
+- Provide clear navigation paths
+- Implement progressive disclosure
+- Test with real users and iterate"""
+        }
+        
+        template = fallback_templates.get(task_type, fallback_templates['design'])
+        return f"**Note: AI generation unavailable. Using enhanced template.**\n\n{template}"
     
     def clear_cache(self):
         """Clear the prompt generation cache."""
@@ -115,46 +356,64 @@ class PromptGenerator:
         
     def generate_comprehensive_prompt(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate a comprehensive prompt for recreating a similar website/application.
+        Generate a comprehensive prompt for recreating a similar website/application using multi-modal AI.
         
         Args:
             analysis_data (dict): Structured analysis data from WebsiteAnalyzer
             
         Returns:
-            dict: Comprehensive prompt in both text and JSON formats
+            dict: Comprehensive prompt in both text and JSON formats with enhanced quality
         """
         try:
-            logger.info("Generating comprehensive prompt from analysis data")
+            logger.info("Generating comprehensive prompt from analysis data using multi-modal AI")
             
-            # Generate different sections of the prompt
-            design_prompt = self._generate_design_prompt(analysis_data)
-            functionality_prompt = self._generate_functionality_prompt(analysis_data)
-            technical_prompt = self._generate_technical_prompt(analysis_data)
-            content_prompt = self._generate_content_prompt(analysis_data)
-            ux_prompt = self._generate_ux_prompt(analysis_data)
+            # Enhanced prompt generation with multi-modal approach for better quality
+            design_prompt = self._generate_design_prompt_enhanced(analysis_data)
+            functionality_prompt = self._generate_functionality_prompt_enhanced(analysis_data)
+            technical_prompt = self._generate_technical_prompt_enhanced(analysis_data)
+            content_prompt = self._generate_content_prompt_enhanced(analysis_data)
+            ux_prompt = self._generate_ux_prompt_enhanced(analysis_data)
+            
+            # New enhanced sections
+            accessibility_prompt = self._generate_accessibility_prompt(analysis_data)
+            performance_prompt = self._generate_performance_prompt(analysis_data)
+            seo_prompt = self._generate_seo_prompt(analysis_data)
             
             # Combine all sections into a comprehensive prompt
-            comprehensive_prompt = self._combine_prompt_sections({
+            comprehensive_prompt = self._combine_prompt_sections_enhanced({
                 'design': design_prompt,
                 'functionality': functionality_prompt,
                 'technical': technical_prompt,
                 'content': content_prompt,
-                'user_experience': ux_prompt
+                'user_experience': ux_prompt,
+                'accessibility': accessibility_prompt,
+                'performance': performance_prompt,
+                'seo': seo_prompt
             }, analysis_data)
             
-            # Generate both text and JSON formats
-            text_prompt = self._format_as_text(comprehensive_prompt, analysis_data)
-            json_prompt = self._format_as_json(comprehensive_prompt, analysis_data)
+            # Generate enhanced formats
+            text_prompt = self._format_as_text_enhanced(comprehensive_prompt, analysis_data)
+            json_prompt = self._format_as_json_enhanced(comprehensive_prompt, analysis_data)
+            markdown_prompt = self._format_as_markdown(comprehensive_prompt, analysis_data)
+            
+            # Generate implementation roadmap
+            implementation_roadmap = self._generate_implementation_roadmap(analysis_data, comprehensive_prompt)
             
             return {
                 'text_format': text_prompt,
                 'json_format': json_prompt,
+                'markdown_format': markdown_prompt,
                 'sections': comprehensive_prompt,
+                'implementation_roadmap': implementation_roadmap,
                 'metadata': {
                     'source_url': analysis_data.get('website_info', {}).get('url', ''),
                     'analysis_timestamp': analysis_data.get('timestamp'),
                     'website_type': analysis_data.get('website_info', {}).get('website_type', ''),
-                    'primary_purpose': analysis_data.get('website_info', {}).get('primary_purpose', '')
+                    'primary_purpose': analysis_data.get('website_info', {}).get('primary_purpose', ''),
+                    'complexity_score': self._calculate_complexity_score(analysis_data),
+                    'estimated_development_time': self._estimate_development_time(analysis_data),
+                    'recommended_team_size': self._recommend_team_size(analysis_data),
+                    'technology_recommendations': self._recommend_technologies(analysis_data)
                 }
             }
             
@@ -891,3 +1150,935 @@ class PromptGenerator:
 - Timeline delays via agile methodology and regular check-ins
 - Budget overruns through phased development approach
 - User adoption via comprehensive testing and feedback integration"""
+
+    # Enhanced Prompt Generation Methods
+    
+    def _generate_design_prompt_enhanced(self, analysis_data: Dict[str, Any]) -> str:
+        """Generate enhanced design-focused prompt using multi-modal AI."""
+        design_analysis = analysis_data.get('design_analysis', {})
+        
+        system_prompt = """You are an expert UI/UX designer with deep knowledge of modern design principles, accessibility standards, and current design trends. Based on the comprehensive website analysis provided, generate a detailed, actionable design prompt that captures not just the visual elements, but the design philosophy, user psychology, and strategic design decisions."""
+        
+        enhanced_prompt = f"""
+        Based on this comprehensive website analysis, create a detailed design implementation guide:
+        
+        **Advanced Design Analysis:**
+        - Color Psychology: {design_analysis.get('color_palette', {}).get('psychology_profile', {})}
+        - Typography Intelligence: {design_analysis.get('typography', {})}
+        - Layout Sophistication: {design_analysis.get('layout', {})}
+        - Design System Maturity: {design_analysis.get('design_system', {})}
+        - Brand Personality: {design_analysis.get('brand_analysis', {})}
+        - Visual Style Profile: {design_analysis.get('visual_style', {})}
+        - Accessibility Features: {design_analysis.get('accessibility', {})}
+        - Modern Design Trends: {design_analysis.get('design_trends', [])}
+        
+        Generate a comprehensive design guide covering:
+        
+        1. **Design Philosophy & Strategy**
+           - Overall aesthetic direction and design principles
+           - Target audience design considerations
+           - Brand alignment and visual identity strategy
+           - Emotional design goals and user psychology
+        
+        2. **Advanced Color System**
+           - Primary, secondary, and accent color specifications
+           - Color harmony and psychological impact
+           - Dark mode and accessibility considerations
+           - Semantic color usage (success, warning, error states)
+        
+        3. **Sophisticated Typography System**
+           - Font pairing strategy and hierarchy implementation
+           - Readability optimization across devices
+           - Brand personality expression through typography
+           - Performance and loading considerations
+        
+        4. **Layout & Spatial Design**
+           - Grid system and spacing rhythm
+           - Modern CSS layout techniques (Grid, Flexbox)
+           - Responsive breakpoint strategy
+           - Component composition and reusability
+        
+        5. **Interactive Design Elements**
+           - Button system with variants and states
+           - Form design and input patterns
+           - Navigation and menu systems
+           - Card layouts and content containers
+        
+        6. **Motion & Animation Strategy**
+           - Micro-interaction design principles
+           - Page transition and loading animations
+           - Accessibility considerations for motion
+           - Performance optimization for animations
+        
+        Provide specific implementation details and modern CSS techniques.
+        """
+        
+        try:
+            return self._generate_with_fallback(
+                f"SYSTEM: {system_prompt}\nUSER: {enhanced_prompt}", 
+                'design', 
+                use_multi_modal=True
+            )
+        except Exception as e:
+            logger.error(f"Error generating enhanced design prompt: {str(e)}")
+            return self._fallback_design_prompt(design_analysis)
+    
+    def _generate_functionality_prompt_enhanced(self, analysis_data: Dict[str, Any]) -> str:
+        """Generate enhanced functionality-focused prompt using specialized models."""
+        functionality_analysis = analysis_data.get('functionality_analysis', {})
+        
+        system_prompt = """You are a senior software architect and product manager with expertise in modern web applications, user experience design, and technical implementation. Generate a comprehensive functionality specification that covers both user-facing features and technical implementation details."""
+        
+        enhanced_prompt = f"""
+        Based on this detailed functionality analysis, create a comprehensive feature specification:
+        
+        **Functionality Intelligence:**
+        - Core Features: {functionality_analysis.get('core_features', [])}
+        - User Interactions: {functionality_analysis.get('user_interactions', {})}
+        - Navigation Architecture: {functionality_analysis.get('navigation_structure', {})}
+        - Form Systems: {functionality_analysis.get('form_functionality', {})}
+        - Search & Discovery: {functionality_analysis.get('search_functionality', {})}
+        - Social Features: {functionality_analysis.get('social_features', [])}
+        - Advanced Capabilities: {functionality_analysis.get('advanced_features', [])}
+        
+        Generate a detailed implementation guide covering:
+        
+        1. **Core Feature Architecture**
+           - Primary user flows and use cases
+           - Feature prioritization and MVP definition
+           - Advanced functionality roadmap
+           - Integration points and dependencies
+        
+        2. **User Interaction Patterns**
+           - Interactive component specifications
+           - State management and data flow
+           - Real-time features and notifications
+           - Offline capability requirements
+        
+        3. **Navigation & Information Architecture**
+           - Site structure and content organization
+           - Search functionality and filtering
+           - Breadcrumb and wayfinding systems
+           - Mobile navigation patterns
+        
+        4. **Data Management & Forms**
+           - Form validation and error handling
+           - Data persistence and synchronization
+           - File upload and media management
+           - User preferences and settings
+        
+        5. **Advanced Features & Integrations**
+           - Third-party service integrations
+           - API design and data exchange
+           - Analytics and tracking implementation
+           - Performance monitoring and optimization
+        
+        6. **Security & Compliance**
+           - Authentication and authorization flows
+           - Data protection and privacy compliance
+           - Input sanitization and security measures
+           - Audit trails and logging systems
+        
+        Include technical implementation details and modern best practices.
+        """
+        
+        try:
+            return self._generate_with_fallback(
+                f"SYSTEM: {system_prompt}\nUSER: {enhanced_prompt}", 
+                'functionality', 
+                use_multi_modal=True
+            )
+        except Exception as e:
+            logger.error(f"Error generating enhanced functionality prompt: {str(e)}")
+            return self._fallback_functionality_prompt(functionality_analysis)
+    
+    def _generate_technical_prompt_enhanced(self, analysis_data: Dict[str, Any]) -> str:
+        """Generate enhanced technical implementation prompt using code-specialized models."""
+        technical_analysis = analysis_data.get('technical_analysis', {})
+        
+        system_prompt = """You are a lead developer and DevOps engineer with expertise in modern web technologies, cloud architecture, and performance optimization. Generate a comprehensive technical implementation guide that covers architecture, technologies, deployment, and maintenance."""
+        
+        enhanced_prompt = f"""
+        Based on this technical analysis, create a detailed implementation specification:
+        
+        **Technical Intelligence:**
+        - Frontend Technologies: {technical_analysis.get('frontend_technologies', [])}
+        - Backend Architecture: {technical_analysis.get('backend_analysis', {})}
+        - Modern Features: {technical_analysis.get('modern_features', [])}
+        - Performance Metrics: {technical_analysis.get('performance_analysis', {})}
+        - Security Implementation: {technical_analysis.get('security_analysis', {})}
+        - Deployment Strategy: {technical_analysis.get('deployment_analysis', {})}
+        
+        Generate a comprehensive technical guide covering:
+        
+        1. **Architecture & Technology Stack**
+           - Frontend framework selection and justification
+           - Backend technology and database choices
+           - Microservices vs monolithic considerations
+           - Cloud platform and hosting strategy
+        
+        2. **Development Environment & Tools**
+           - Build system and bundler configuration
+           - Code quality tools and linting setup
+           - Testing framework and coverage requirements
+           - Development workflow and CI/CD pipeline
+        
+        3. **Performance Optimization**
+           - Core Web Vitals optimization strategies
+           - Code splitting and lazy loading implementation
+           - Asset optimization and CDN strategy
+           - Database query optimization and caching
+        
+        4. **Security Implementation**
+           - Authentication and authorization systems
+           - Data encryption and secure communication
+           - Input validation and sanitization
+           - Security headers and OWASP compliance
+        
+        5. **Scalability & Monitoring**
+           - Auto-scaling and load balancing setup
+           - Error tracking and performance monitoring
+           - Logging and analytics implementation
+           - Backup and disaster recovery planning
+        
+        6. **Maintenance & Operations**
+           - Version control and release management
+           - Documentation and code commenting standards
+           - Team collaboration and code review processes
+           - Long-term maintenance and technical debt management
+        
+        Provide specific implementation code examples and configuration details.
+        """
+        
+        try:
+            return self._generate_with_fallback(
+                f"SYSTEM: {system_prompt}\nUSER: {enhanced_prompt}", 
+                'technical', 
+                use_multi_modal=True
+            )
+        except Exception as e:
+            logger.error(f"Error generating enhanced technical prompt: {str(e)}")
+            return self._fallback_technical_prompt(technical_analysis)
+    
+    def _generate_content_prompt_enhanced(self, analysis_data: Dict[str, Any]) -> str:
+        """Generate enhanced content strategy prompt using conversational AI."""
+        content_analysis = analysis_data.get('content_strategy', {})
+        
+        system_prompt = """You are a content strategist and UX writer with expertise in information architecture, SEO, and user-centered content design. Generate a comprehensive content strategy that addresses both user needs and business objectives."""
+        
+        enhanced_prompt = f"""
+        Based on this content analysis, create a detailed content implementation strategy:
+        
+        **Content Intelligence:**
+        - Content Structure: {content_analysis.get('content_structure', {})}
+        - Content Types: {content_analysis.get('content_types', [])}
+        - Information Architecture: {content_analysis.get('information_architecture', {})}
+        - SEO Analysis: {content_analysis.get('seo_analysis', {})}
+        - Multimedia Usage: {content_analysis.get('multimedia_usage', {})}
+        - Content Quality: {content_analysis.get('content_quality', {})}
+        
+        Generate a comprehensive content guide covering:
+        
+        1. **Content Strategy & Governance**
+           - Content mission and editorial guidelines
+           - Voice, tone, and brand personality
+           - Content lifecycle and maintenance processes
+           - Quality assurance and review workflows
+        
+        2. **Information Architecture**
+           - Content hierarchy and organization
+           - Navigation and findability strategies
+           - Search functionality and content discovery
+           - Cross-linking and content relationships
+        
+        3. **Content Creation Guidelines**
+           - Writing style and formatting standards
+           - Accessibility and inclusive language practices
+           - SEO optimization and keyword strategy
+           - Multimedia content integration standards
+        
+        4. **User Experience Content**
+           - Microcopy and interface text guidelines
+           - Error messages and help documentation
+           - Onboarding and tutorial content
+           - Form labels and instructional text
+        
+        5. **Content Management & Workflows**
+           - Content creation and approval processes
+           - Publishing schedules and content calendars
+           - Version control and content updates
+           - Analytics and performance measurement
+        
+        6. **Localization & Accessibility**
+           - Multi-language content considerations
+           - Cultural adaptation and localization
+           - Screen reader compatibility
+           - Plain language and readability optimization
+        
+        Include specific examples and implementation guidelines.
+        """
+        
+        try:
+            return self._generate_with_fallback(
+                f"SYSTEM: {system_prompt}\nUSER: {enhanced_prompt}", 
+                'content', 
+                use_multi_modal=True
+            )
+        except Exception as e:
+            logger.error(f"Error generating enhanced content prompt: {str(e)}")
+            return self._fallback_content_prompt(content_analysis)
+    
+    def _generate_ux_prompt_enhanced(self, analysis_data: Dict[str, Any]) -> str:
+        """Generate enhanced UX strategy prompt using detailed analysis."""
+        ux_analysis = analysis_data.get('user_experience_analysis', {})
+        
+        system_prompt = """You are a UX research expert and interaction designer with deep knowledge of user psychology, accessibility principles, and conversion optimization. Generate a comprehensive UX strategy that prioritizes user needs while achieving business objectives."""
+        
+        enhanced_prompt = f"""
+        Based on this UX analysis, create a detailed user experience strategy:
+        
+        **UX Intelligence:**
+        - User Journey: {ux_analysis.get('user_journey', {})}
+        - Usability Patterns: {ux_analysis.get('usability_patterns', {})}
+        - Accessibility Features: {ux_analysis.get('accessibility_features', {})}
+        - Mobile Experience: {ux_analysis.get('mobile_experience', {})}
+        - Conversion Optimization: {ux_analysis.get('conversion_optimization', {})}
+        - User Research Insights: {ux_analysis.get('user_research', {})}
+        
+        Generate a comprehensive UX implementation guide covering:
+        
+        1. **User Research & Personas**
+           - Target user identification and segmentation
+           - User journey mapping and pain point analysis
+           - Accessibility and inclusive design considerations
+           - Usability testing and validation strategies
+        
+        2. **Interaction Design Patterns**
+           - Micro-interaction design and feedback systems
+           - Navigation patterns and wayfinding
+           - Form design and input optimization
+           - Error prevention and recovery strategies
+        
+        3. **Mobile & Responsive Experience**
+           - Mobile-first design principles
+           - Touch interface optimization
+           - Progressive web app considerations
+           - Cross-device experience continuity
+        
+        4. **Accessibility & Inclusion**
+           - WCAG 2.1 AA compliance implementation
+           - Keyboard navigation and focus management
+           - Screen reader optimization
+           - Color contrast and visual accessibility
+        
+        5. **Conversion & Engagement**
+           - Call-to-action optimization
+           - Trust building and social proof elements
+           - Onboarding and user activation flows
+           - Retention and re-engagement strategies
+        
+        6. **Testing & Optimization**
+           - A/B testing framework and metrics
+           - User feedback collection and analysis
+           - Performance monitoring and optimization
+           - Continuous improvement processes
+        
+        Provide actionable recommendations and implementation priorities.
+        """
+        
+        try:
+            return self._generate_with_fallback(
+                f"SYSTEM: {system_prompt}\nUSER: {enhanced_prompt}", 
+                'ux', 
+                use_multi_modal=True
+            )
+        except Exception as e:
+            logger.error(f"Error generating enhanced UX prompt: {str(e)}")
+            return self._fallback_ux_prompt(ux_analysis)
+    
+    # New enhanced prompt sections
+    
+    def _generate_accessibility_prompt(self, analysis_data: Dict[str, Any]) -> str:
+        """Generate comprehensive accessibility implementation prompt."""
+        accessibility_analysis = analysis_data.get('design_analysis', {}).get('accessibility', {})
+        
+        prompt = f"""
+        Generate a comprehensive accessibility implementation strategy:
+        
+        Current Accessibility Assessment: {accessibility_analysis}
+        
+        **Implementation Requirements:**
+        1. WCAG 2.1 AA compliance standards
+        2. Screen reader optimization and ARIA implementation
+        3. Keyboard navigation and focus management
+        4. Color contrast and visual accessibility
+        5. Mobile accessibility considerations
+        6. Testing and validation procedures
+        """
+        
+        try:
+            return self._generate_with_fallback(prompt, 'accessibility')
+        except Exception:
+            return """## Accessibility Implementation Strategy
+            
+**WCAG 2.1 AA Compliance:**
+- Implement semantic HTML structure with proper heading hierarchy
+- Ensure sufficient color contrast ratios (4.5:1 for normal text)
+- Provide alternative text for all images and multimedia content
+- Design keyboard-accessible navigation and interactive elements
+
+**Screen Reader Optimization:**
+- Use ARIA labels and descriptions for complex components
+- Implement proper form labeling and error messaging
+- Provide skip navigation links and landmark regions
+- Test with actual screen reader software
+
+**Testing & Validation:**
+- Automated accessibility testing integration
+- Manual testing with assistive technologies
+- User testing with disabled users
+- Regular accessibility audits and compliance monitoring"""
+    
+    def _generate_performance_prompt(self, analysis_data: Dict[str, Any]) -> str:
+        """Generate performance optimization prompt."""
+        performance_analysis = analysis_data.get('technical_analysis', {}).get('performance_analysis', {})
+        
+        prompt = f"""
+        Generate a comprehensive performance optimization strategy:
+        
+        Current Performance Metrics: {performance_analysis}
+        
+        **Optimization Requirements:**
+        1. Core Web Vitals optimization (LCP, FID, CLS)
+        2. Asset optimization and delivery strategies
+        3. Code splitting and lazy loading implementation
+        4. Caching strategies and CDN utilization
+        5. Database and API optimization
+        6. Monitoring and measurement frameworks
+        """
+        
+        try:
+            return self._generate_with_fallback(prompt, 'technical')
+        except Exception:
+            return """## Performance Optimization Strategy
+            
+**Core Web Vitals:**
+- Largest Contentful Paint (LCP): Target <2.5 seconds
+- First Input Delay (FID): Target <100 milliseconds
+- Cumulative Layout Shift (CLS): Target <0.1
+
+**Asset Optimization:**
+- Image compression and next-gen formats (WebP, AVIF)
+- CSS and JavaScript minification and compression
+- Critical CSS inlining and non-critical resource deferring
+- Font optimization and loading strategies
+
+**Code Performance:**
+- Bundle splitting and dynamic imports
+- Tree shaking and dead code elimination
+- Service worker implementation for caching
+- Database query optimization and indexing"""
+    
+    def _generate_seo_prompt(self, analysis_data: Dict[str, Any]) -> str:
+        """Generate SEO optimization prompt."""
+        seo_analysis = analysis_data.get('content_strategy', {}).get('seo_analysis', {})
+        
+        prompt = f"""
+        Generate a comprehensive SEO implementation strategy:
+        
+        Current SEO Analysis: {seo_analysis}
+        
+        **SEO Requirements:**
+        1. Technical SEO optimization and site structure
+        2. Content strategy and keyword optimization
+        3. Meta tag and structured data implementation
+        4. Site speed and Core Web Vitals for SEO
+        5. Mobile-first indexing considerations
+        6. Local SEO and schema markup
+        """
+        
+        try:
+            return self._generate_with_fallback(prompt, 'content')
+        except Exception:
+            return """## SEO Implementation Strategy
+            
+**Technical SEO:**
+- Implement proper URL structure and canonical tags
+- Create XML sitemaps and robots.txt optimization
+- Ensure proper heading hierarchy (H1-H6) usage
+- Implement structured data and schema markup
+
+**Content Optimization:**
+- Keyword research and content strategy development
+- Meta title and description optimization
+- Internal linking strategy and anchor text optimization
+- Content freshness and regular updates
+
+**Performance & Mobile:**
+- Core Web Vitals optimization for ranking factors
+- Mobile-first design and responsive implementation
+- Site speed optimization and loading performance
+- Progressive web app features for enhanced UX"""
+    
+    # Enhanced formatting and utility methods
+    
+    def _combine_prompt_sections_enhanced(self, sections: Dict[str, str], analysis_data: Dict[str, Any]) -> Dict[str, str]:
+        """Combine prompt sections with enhanced organization and flow."""
+        website_info = analysis_data.get('website_info', {})
+        business_model = analysis_data.get('business_model', {})
+        
+        # Generate executive summary using multi-modal approach
+        executive_summary = self._generate_executive_summary_enhanced(website_info, business_model)
+        
+        enhanced_sections = {
+            'executive_summary': executive_summary,
+            'design': sections.get('design', ''),
+            'functionality': sections.get('functionality', ''),
+            'technical': sections.get('technical', ''),
+            'content': sections.get('content', ''),
+            'user_experience': sections.get('user_experience', ''),
+            'accessibility': sections.get('accessibility', ''),
+            'performance': sections.get('performance', ''),
+            'seo': sections.get('seo', ''),
+            'implementation_roadmap': self._generate_implementation_roadmap(analysis_data, sections)
+        }
+        
+        return enhanced_sections
+    
+    def _format_as_text_enhanced(self, sections: Dict[str, str], analysis_data: Dict[str, Any]) -> str:
+        """Format prompt sections as enhanced readable text."""
+        website_url = analysis_data.get('website_info', {}).get('url', 'analyzed website')
+        website_type = analysis_data.get('website_info', {}).get('website_type', 'web application')
+        
+        text_prompt = f"""# Website Recreation Prompt - Enhanced Analysis
+        
+**Source:** {website_url}
+**Type:** {website_type.replace('_', ' ').title()}
+**Generated:** {analysis_data.get('timestamp', 'Unknown')}
+
+---
+
+{sections.get('executive_summary', '')}
+
+---
+
+{sections.get('design', '')}
+
+---
+
+{sections.get('functionality', '')}
+
+---
+
+{sections.get('technical', '')}
+
+---
+
+{sections.get('content', '')}
+
+---
+
+{sections.get('user_experience', '')}
+
+---
+
+{sections.get('accessibility', '')}
+
+---
+
+{sections.get('performance', '')}
+
+---
+
+{sections.get('seo', '')}
+
+---
+
+{sections.get('implementation_roadmap', '')}
+
+---
+
+## Additional Notes
+
+This comprehensive prompt was generated using advanced AI analysis with multiple specialized models for different aspects of web development. Each section provides detailed, actionable guidance for recreating a similar website or application.
+
+**Recommended Approach:**
+1. Start with the executive summary for project context
+2. Follow the implementation roadmap for structured development
+3. Use each section as a detailed specification for that aspect
+4. Adapt recommendations based on your specific requirements and constraints
+
+**Quality Assurance:**
+- Cross-reference requirements between sections
+- Validate design decisions against user experience guidelines
+- Ensure technical choices support business objectives
+- Test accessibility and performance throughout development
+"""
+        
+        return text_prompt.strip()
+    
+    def _format_as_json_enhanced(self, sections: Dict[str, str], analysis_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Format prompt sections as enhanced structured JSON."""
+        return {
+            "metadata": {
+                "source_url": analysis_data.get('website_info', {}).get('url', ''),
+                "website_type": analysis_data.get('website_info', {}).get('website_type', ''),
+                "analysis_timestamp": analysis_data.get('timestamp', ''),
+                "prompt_version": "2.0_enhanced",
+                "ai_models_used": list(self.models.keys()),
+                "complexity_score": self._calculate_complexity_score(analysis_data),
+                "estimated_effort": self._estimate_development_time(analysis_data)
+            },
+            "project_overview": {
+                "executive_summary": sections.get('executive_summary', ''),
+                "key_objectives": self._extract_key_objectives(analysis_data),
+                "success_criteria": self._define_success_criteria(analysis_data),
+                "risk_factors": self._identify_risk_factors(analysis_data)
+            },
+            "specifications": {
+                "design": {
+                    "content": sections.get('design', ''),
+                    "priority": "high",
+                    "dependencies": ["user_experience"],
+                    "estimated_effort": "3-4 weeks"
+                },
+                "functionality": {
+                    "content": sections.get('functionality', ''),
+                    "priority": "critical",
+                    "dependencies": ["technical", "design"],
+                    "estimated_effort": "4-6 weeks"
+                },
+                "technical": {
+                    "content": sections.get('technical', ''),
+                    "priority": "critical",
+                    "dependencies": [],
+                    "estimated_effort": "2-3 weeks"
+                },
+                "content": {
+                    "content": sections.get('content', ''),
+                    "priority": "medium",
+                    "dependencies": ["design", "functionality"],
+                    "estimated_effort": "2-3 weeks"
+                },
+                "user_experience": {
+                    "content": sections.get('user_experience', ''),
+                    "priority": "high",
+                    "dependencies": ["design"],
+                    "estimated_effort": "2-3 weeks"
+                },
+                "accessibility": {
+                    "content": sections.get('accessibility', ''),
+                    "priority": "high",
+                    "dependencies": ["design", "functionality"],
+                    "estimated_effort": "1-2 weeks"
+                },
+                "performance": {
+                    "content": sections.get('performance', ''),
+                    "priority": "high",
+                    "dependencies": ["technical"],
+                    "estimated_effort": "1-2 weeks"
+                },
+                "seo": {
+                    "content": sections.get('seo', ''),
+                    "priority": "medium",
+                    "dependencies": ["content", "technical"],
+                    "estimated_effort": "1-2 weeks"
+                }
+            },
+            "implementation": {
+                "roadmap": sections.get('implementation_roadmap', ''),
+                "phases": self._define_implementation_phases(analysis_data),
+                "team_requirements": self._recommend_team_composition(analysis_data),
+                "timeline": self._create_project_timeline(analysis_data)
+            },
+            "quality_assurance": {
+                "testing_strategy": self._define_testing_strategy(analysis_data),
+                "performance_targets": self._set_performance_targets(analysis_data),
+                "accessibility_requirements": self._define_accessibility_requirements(analysis_data),
+                "deployment_checklist": self._create_deployment_checklist(analysis_data)
+            }
+        }
+    
+    def _format_as_markdown(self, sections: Dict[str, str], analysis_data: Dict[str, Any]) -> str:
+        """Format prompt sections as enhanced Markdown documentation."""
+        website_url = analysis_data.get('website_info', {}).get('url', 'analyzed website')
+        website_type = analysis_data.get('website_info', {}).get('website_type', 'web application')
+        
+        return f"""# Website Recreation Guide
+        
+> **Source:** {website_url}  
+> **Type:** {website_type.replace('_', ' ').title()}  
+> **Generated:** {analysis_data.get('timestamp', 'Unknown')}
+
+## Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [Design Specifications](#design-specifications)
+3. [Functionality Requirements](#functionality-requirements)
+4. [Technical Implementation](#technical-implementation)
+5. [Content Strategy](#content-strategy)
+6. [User Experience](#user-experience)
+7. [Accessibility](#accessibility)
+8. [Performance](#performance)
+9. [SEO Optimization](#seo-optimization)
+10. [Implementation Roadmap](#implementation-roadmap)
+
+---
+
+## Executive Summary
+
+{sections.get('executive_summary', '')}
+
+---
+
+## Design Specifications
+
+{sections.get('design', '')}
+
+---
+
+## Functionality Requirements
+
+{sections.get('functionality', '')}
+
+---
+
+## Technical Implementation
+
+{sections.get('technical', '')}
+
+---
+
+## Content Strategy
+
+{sections.get('content', '')}
+
+---
+
+## User Experience
+
+{sections.get('user_experience', '')}
+
+---
+
+## Accessibility
+
+{sections.get('accessibility', '')}
+
+---
+
+## Performance
+
+{sections.get('performance', '')}
+
+---
+
+## SEO Optimization
+
+{sections.get('seo', '')}
+
+---
+
+## Implementation Roadmap
+
+{sections.get('implementation_roadmap', '')}
+
+---
+
+## Additional Resources
+
+### Quality Checklist
+- [ ] Design system implementation complete
+- [ ] All functionality tested and validated
+- [ ] Performance targets achieved
+- [ ] Accessibility compliance verified
+- [ ] SEO optimization implemented
+- [ ] Content strategy executed
+- [ ] User testing completed
+
+### Tools & Technologies
+- **Design:** Figma, Sketch, Adobe XD
+- **Development:** Modern JavaScript frameworks, CSS preprocessors
+- **Testing:** Jest, Cypress, Lighthouse, axe-core
+- **Deployment:** CI/CD pipelines, cloud hosting
+- **Monitoring:** Analytics, performance monitoring, error tracking
+
+---
+
+*This guide was generated using advanced AI analysis with multiple specialized models. Adapt recommendations based on your specific requirements and constraints.*
+"""
+    
+    # Utility methods for enhanced functionality
+    
+    def _generate_executive_summary_enhanced(self, website_info: Dict[str, Any], business_model: Dict[str, Any]) -> str:
+        """Generate enhanced executive summary using multi-modal AI."""
+        try:
+            prompt = f"""
+            Generate a comprehensive executive summary for a web development project based on:
+            
+            Website Info: {website_info}
+            Business Model: {business_model}
+            
+            Include project vision, scope, target audience, requirements summary, implementation strategy, and success metrics.
+            """
+            
+            return self._generate_with_fallback(prompt, 'structured_output', use_multi_modal=True)
+        except Exception:
+            return self._fallback_executive_summary(website_info, business_model)
+    
+    def _generate_implementation_roadmap(self, analysis_data: Dict[str, Any], sections: Dict[str, str]) -> str:
+        """Generate detailed implementation roadmap."""
+        complexity = self._calculate_complexity_score(analysis_data)
+        
+        try:
+            prompt = f"""
+            Generate a detailed implementation roadmap for a web development project with complexity score {complexity}.
+            
+            Consider the following sections: {list(sections.keys())}
+            
+            Include phases, timelines, dependencies, team requirements, and risk mitigation strategies.
+            """
+            
+            return self._generate_with_fallback(prompt, 'structured_output')
+        except Exception:
+            return """## Implementation Roadmap
+            
+**Phase 1: Foundation (Weeks 1-2)**
+- Project setup and environment configuration
+- Design system and component library creation
+- Basic page structure and navigation
+
+**Phase 2: Core Development (Weeks 3-6)**
+- Main functionality implementation
+- Content integration and management
+- Responsive design implementation
+
+**Phase 3: Enhancement (Weeks 7-8)**
+- Performance optimization
+- Accessibility improvements
+- SEO implementation
+
+**Phase 4: Testing & Launch (Weeks 9-10)**
+- Comprehensive testing and bug fixes
+- User acceptance testing
+- Deployment and go-live"""
+    
+    def _calculate_complexity_score(self, analysis_data: Dict[str, Any]) -> int:
+        """Calculate project complexity score (1-100)."""
+        score = 50  # Base score
+        
+        # Add complexity based on features
+        features = analysis_data.get('functionality_analysis', {}).get('core_features', [])
+        score += len(features) * 5
+        
+        # Add complexity based on design sophistication
+        design_system = analysis_data.get('design_analysis', {}).get('design_system', {})
+        if design_system.get('systematic_approach') == 'methodical':
+            score += 10
+        
+        # Add complexity based on technical requirements
+        modern_features = analysis_data.get('technical_analysis', {}).get('modern_features', [])
+        score += len(modern_features) * 3
+        
+        return min(score, 100)
+    
+    def _estimate_development_time(self, analysis_data: Dict[str, Any]) -> str:
+        """Estimate development time based on complexity."""
+        complexity = self._calculate_complexity_score(analysis_data)
+        
+        if complexity < 40:
+            return "4-6 weeks"
+        elif complexity < 70:
+            return "6-10 weeks"
+        else:
+            return "10-16 weeks"
+    
+    def _recommend_team_size(self, analysis_data: Dict[str, Any]) -> str:
+        """Recommend team size based on project complexity."""
+        complexity = self._calculate_complexity_score(analysis_data)
+        
+        if complexity < 40:
+            return "2-3 developers"
+        elif complexity < 70:
+            return "3-5 developers"
+        else:
+            return "5-8 developers"
+    
+    def _recommend_technologies(self, analysis_data: Dict[str, Any]) -> List[str]:
+        """Recommend technologies based on analysis."""
+        return [
+            "React/Vue.js/Angular",
+            "Node.js/Python/Java",
+            "Modern CSS framework",
+            "Database (SQL/NoSQL)",
+            "Cloud hosting platform"
+        ]
+    
+    # Placeholder methods for JSON formatting
+    def _extract_key_objectives(self, analysis_data: Dict[str, Any]) -> List[str]:
+        return ["User engagement", "Performance optimization", "Accessibility compliance"]
+    
+    def _define_success_criteria(self, analysis_data: Dict[str, Any]) -> List[str]:
+        return ["Page load time <3s", "WCAG AA compliance", "95% user satisfaction"]
+    
+    def _identify_risk_factors(self, analysis_data: Dict[str, Any]) -> List[str]:
+        return ["Technical complexity", "Timeline constraints", "Resource availability"]
+    
+    def _define_implementation_phases(self, analysis_data: Dict[str, Any]) -> List[Dict[str, str]]:
+        return [
+            {"phase": "Planning", "duration": "1-2 weeks", "deliverables": "Requirements and design"},
+            {"phase": "Development", "duration": "6-8 weeks", "deliverables": "Core functionality"},
+            {"phase": "Testing", "duration": "2-3 weeks", "deliverables": "Quality assurance"},
+            {"phase": "Launch", "duration": "1 week", "deliverables": "Deployment and monitoring"}
+        ]
+    
+    def _recommend_team_composition(self, analysis_data: Dict[str, Any]) -> Dict[str, str]:
+        return {
+            "frontend_developer": "1-2 developers",
+            "backend_developer": "1-2 developers", 
+            "ui_ux_designer": "1 designer",
+            "project_manager": "1 PM",
+            "qa_engineer": "1 tester"
+        }
+    
+    def _create_project_timeline(self, analysis_data: Dict[str, Any]) -> Dict[str, str]:
+        return {
+            "total_duration": self._estimate_development_time(analysis_data),
+            "start_to_mvp": "60% of total time",
+            "testing_phase": "20% of total time",
+            "deployment": "5% of total time"
+        }
+    
+    def _define_testing_strategy(self, analysis_data: Dict[str, Any]) -> Dict[str, str]:
+        return {
+            "unit_testing": "Jest/Vitest framework",
+            "integration_testing": "Cypress/Playwright",
+            "accessibility_testing": "axe-core automated testing",
+            "performance_testing": "Lighthouse CI integration"
+        }
+    
+    def _set_performance_targets(self, analysis_data: Dict[str, Any]) -> Dict[str, str]:
+        return {
+            "page_load_time": "<3 seconds",
+            "largest_contentful_paint": "<2.5 seconds",
+            "first_input_delay": "<100 milliseconds",
+            "cumulative_layout_shift": "<0.1"
+        }
+    
+    def _define_accessibility_requirements(self, analysis_data: Dict[str, Any]) -> Dict[str, str]:
+        return {
+            "wcag_compliance": "AA level required",
+            "keyboard_navigation": "Full support required",
+            "screen_reader_support": "NVDA, JAWS, VoiceOver compatible",
+            "color_contrast": "4.5:1 minimum ratio"
+        }
+    
+    def _create_deployment_checklist(self, analysis_data: Dict[str, Any]) -> List[str]:
+        return [
+            "Performance optimization completed",
+            "Accessibility testing passed",
+            "Cross-browser testing completed",
+            "Security audit completed",
+            "SEO implementation verified",
+            "Analytics and monitoring configured"
+        ]

@@ -16,3 +16,5 @@ Technical Recommendations: Implementation strategies and best practices
 Content Strategy: Guidelines for content creation and organization
 UX Guidelines: User experience principles and accessibility considerations
 Ready-to-use Prompts: Formatted for use with various AI tools
+
+<img width="2340" height="1944" alt="_- visual selection" src="https://github.com/user-attachments/assets/726378a1-87c9-44cb-a751-103a78bd21e6" />

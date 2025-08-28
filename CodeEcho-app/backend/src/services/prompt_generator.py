@@ -1,10 +1,11 @@
 """
 AI-driven prompt generation service for creating comprehensive prompts from website analysis.
+Uses Ollama for local, secure, and open-source AI model inference.
 """
 import json
 import os
 from typing import Dict, Any, List
-import google.generativeai as genai
+import ollama
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -12,8 +13,81 @@ logger = logging.getLogger(__name__)
 
 class PromptGenerator:
     def __init__(self):
-        self.api_key = os.getenv('GEMINI_API_KEY', 'AIzaSyAQ-jKUz6O6zpU4ECBtcjW8L4BnP-TWgLg')
-        genai.configure(api_key=self.api_key)
+        # Ollama model configuration with fallback strategy
+        self.models = {
+            'primary': 'llama3.1:8b',      # Fast, balanced model for general tasks
+            'reasoning': 'qwen2.5:7b',     # Excellent for reasoning and code generation
+            'creative': 'mistral:7b',      # Good for creative content generation
+            'detailed': 'gemma2:9b'        # Best for detailed, comprehensive responses
+        }
+        
+        # Model selection strategy based on task type
+        self.task_models = {
+            'design': 'creative',      # Creative tasks benefit from Mistral
+            'functionality': 'reasoning',  # Logic and reasoning tasks for Qwen
+            'technical': 'reasoning',      # Technical implementation needs reasoning
+            'content': 'creative',         # Content strategy benefits from creativity
+            'ux': 'detailed',             # UX needs detailed analysis
+            'default': 'primary'          # Default to balanced Llama
+        }
+        
+        self.client = ollama.Client()
+        self._ensure_models_available()
+    
+    def _ensure_models_available(self):
+        """Check if required models are available, attempt to pull if not."""
+        try:
+            available_models = [model['name'] for model in self.client.list()['models']]
+            logger.info(f"Available Ollama models: {available_models}")
+            
+            for model_name in self.models.values():
+                if model_name not in available_models:
+                    logger.info(f"Model {model_name} not found. Attempting to pull...")
+                    try:
+                        self.client.pull(model_name)
+                        logger.info(f"Successfully pulled model: {model_name}")
+                    except Exception as e:
+                        logger.warning(f"Failed to pull model {model_name}: {str(e)}")
+                        
+        except Exception as e:
+            logger.warning(f"Could not connect to Ollama or check models: {str(e)}")
+    
+    def _generate_with_fallback(self, prompt: str, task_type: str = 'default') -> str:
+        """Generate content with model fallback strategy."""
+        # Determine model preference based on task type
+        preferred_model_key = self.task_models.get(task_type, 'default')
+        preferred_model = self.models[preferred_model_key]
+        
+        # Try models in order of preference
+        model_order = [preferred_model]
+        
+        # Add remaining models as fallbacks
+        for model in self.models.values():
+            if model not in model_order:
+                model_order.append(model)
+        
+        for model_name in model_order:
+            try:
+                logger.info(f"Attempting generation with model: {model_name}")
+                response = self.client.generate(
+                    model=model_name,
+                    prompt=prompt,
+                    options={
+                        'temperature': 0.7,
+                        'top_p': 0.9,
+                        'max_tokens': 2048
+                    }
+                )
+                logger.info(f"Successfully generated content with model: {model_name}")
+                return response['response']
+                
+            except Exception as e:
+                logger.warning(f"Model {model_name} failed: {str(e)}")
+                continue
+        
+        # If all models fail, return fallback content
+        logger.error("All Ollama models failed, using fallback content")
+        return f"Error: Unable to generate AI content. All models failed. Task: {task_type}"
         
     def generate_comprehensive_prompt(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -93,10 +167,8 @@ class PromptGenerator:
         """
         
         try:
-            model = genai.GenerativeModel('gemini-pro')
             prompt = f"SYSTEM: {system_prompt}\nUSER: {user_prompt}"
-            response = model.generate_content(prompt)
-            return response.text
+            return self._generate_with_fallback(prompt, 'design')
         except Exception as e:
             logger.error(f"Error generating design prompt: {str(e)}")
             return self._fallback_design_prompt(design_analysis)
@@ -130,10 +202,8 @@ class PromptGenerator:
         """
         
         try:
-            model = genai.GenerativeModel('gemini-pro')
             prompt = f"SYSTEM: {system_prompt}\nUSER: {user_prompt}"
-            response = model.generate_content(prompt)
-            return response.text
+            return self._generate_with_fallback(prompt, 'functionality')
         except Exception as e:
             logger.error(f"Error generating functionality prompt: {str(e)}")
             return self._fallback_functionality_prompt(functionality_analysis)
@@ -166,10 +236,8 @@ class PromptGenerator:
         """
         
         try:
-            model = genai.GenerativeModel('gemini-pro')
             prompt = f"SYSTEM: {system_prompt}\nUSER: {user_prompt}"
-            response = model.generate_content(prompt)
-            return response.text
+            return self._generate_with_fallback(prompt, 'technical')
         except Exception as e:
             logger.error(f"Error generating technical prompt: {str(e)}")
             return self._fallback_technical_prompt(technical_analysis)
@@ -201,10 +269,8 @@ class PromptGenerator:
         """
         
         try:
-            model = genai.GenerativeModel('gemini-pro')
             prompt = f"SYSTEM: {system_prompt}\nUSER: {user_prompt}"
-            response = model.generate_content(prompt)
-            return response.text
+            return self._generate_with_fallback(prompt, 'content')
         except Exception as e:
             logger.error(f"Error generating content prompt: {str(e)}")
             return self._fallback_content_prompt(content_analysis)
@@ -237,10 +303,8 @@ class PromptGenerator:
         """
         
         try:
-            model = genai.GenerativeModel('gemini-pro')
             prompt = f"SYSTEM: {system_prompt}\nUSER: {user_prompt}"
-            response = model.generate_content(prompt)
-            return response.text
+            return self._generate_with_fallback(prompt, 'ux')
         except Exception as e:
             logger.error(f"Error generating UX prompt: {str(e)}")
             return self._fallback_ux_prompt(ux_analysis)
@@ -276,16 +340,8 @@ class PromptGenerator:
         """
         
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-4.1-mini",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                max_tokens=1000,
-                temperature=0.7
-            )
-            executive_summary = response.choices[0].message.content
+            prompt = f"SYSTEM: {system_prompt}\nUSER: {user_prompt}"
+            executive_summary = self._generate_with_fallback(prompt, 'detailed')
         except Exception as e:
             logger.error(f"Error generating executive summary: {str(e)}")
             executive_summary = self._fallback_executive_summary(website_info, business_model)

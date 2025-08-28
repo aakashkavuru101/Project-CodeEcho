@@ -27,30 +27,42 @@ An intelligent web application that analyzes any website and generates comprehen
 ### Railway (Recommended)
 1. Fork this repository
 2. Connect to [Railway](https://railway.app)
-3. Set `GEMINI_API_KEY` environment variable
+3. Ensure Ollama is set up (see setup instructions below)
 4. Deploy automatically
 
 ### Render
 1. Fork this repository  
 2. Connect to [Render](https://render.com)
 3. Use `deploy.sh` as build command
-4. Set environment variables
+4. Set up Ollama on deployment environment
 
 ### Heroku
 ```bash
 heroku create your-app-name
-heroku config:set GEMINI_API_KEY=your-key-here
+heroku config:set FLASK_ENV=production
 git push heroku main
 ```
 
-## 🔑 Get Your API Key
-Visit [Google AI Studio](https://makersuite.google.com/app/apikey) to get your free Gemini API key.
+## 🤖 Ollama Setup
+
+CodeEcho uses Ollama for secure, local AI inference with multiple open-source models.
+
+### Quick Setup
+1. Install Ollama: Visit [ollama.ai](https://ollama.ai)
+2. Pull models:
+```bash
+ollama pull llama3.1:8b    # Primary: Fast & balanced
+ollama pull qwen2.5:7b     # Reasoning & code
+ollama pull mistral:7b     # Creative content  
+ollama pull gemma2:9b      # Detailed analysis
+```
+3. Start service: `ollama serve`
 
 ## 💻 Technology Stack
 
 ### Backend
 - **Flask**: Python web framework with production configuration
-- **Google Gemini API**: AI-powered prompt generation
+- **Ollama**: Local AI inference with multiple open-source models
 - **BeautifulSoup + Requests**: Reliable web scraping with Playwright fallback
 - **Robust Error Handling**: Works in any deployment environment
 
@@ -60,12 +72,19 @@ Visit [Google AI Studio](https://makersuite.google.com/app/apikey) to get your f
 - **Shadcn/UI**: High-quality UI components
 - **Lucide Icons**: Beautiful icon library
 
+### AI Models
+- **Llama 3.1 8B**: Primary model for balanced performance
+- **Qwen 2.5 7B**: Specialized for reasoning and code generation
+- **Mistral 7B**: Optimized for creative content generation  
+- **Gemma 2 9B**: Best for detailed, comprehensive analysis
+
 ## Installation & Setup
 
 ### Prerequisites
 - Python 3.11+
 - Node.js 20+
 - npm or yarn
+- Ollama installed and running
 
 ### Backend Setup
 

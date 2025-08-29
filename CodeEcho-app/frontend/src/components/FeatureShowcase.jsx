@@ -60,7 +60,7 @@ export default function FeatureShowcase() {
   ];
 
   const stats = [
-    { label: "AI Models", value: "4", icon: <Globe className="h-4 w-4" /> },
+    { label: "AI Models", value: "8", icon: <Globe className="h-4 w-4" /> },
     { label: "Analysis Points", value: "50+", icon: <CheckCircle className="h-4 w-4" /> },
     { label: "Output Formats", value: "3", icon: <Code className="h-4 w-4" /> },
     { label: "Fallback Systems", value: "100%", icon: <Shield className="h-4 w-4" /> }

@@ -31,8 +31,8 @@ export const translations = {
     promptPreview: "Prompt Preview",
     
     // Features
-    fourAiModels: "4 AI Models",
-    multiModelDesc: "Llama, Qwen, Mistral, and Gemma working together with automatic failover",
+    eightAiModels: "8 AI Models",
+    multiModelDesc: "Llama, Qwen, Mistral, Gemma, and 4 more specialized models working together with automatic failover",
     privateProcessing: "100% Private",
     privateDesc: "All processing happens locally with Ollama. Your data never leaves your environment.",
     lightningFast: "Lightning Fast", 

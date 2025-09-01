@@ -351,7 +351,122 @@ def health_check():
             'timestamp': datetime.now().isoformat()
         }), 500
 
-@github_bp.route('/test-github', methods=['POST'])
+@github_bp.route('/demo-repository', methods=['POST'])
+def demo_repository_analysis():
+    """
+    Demo endpoint with mock data for demonstration purposes.
+    """
+    try:
+        data = request.get_json() if request.is_json else {}
+        demo_url = data.get('url', 'https://github.com/demo/portfolio')
+        
+        session_id = str(uuid.uuid4())
+        
+        # Create realistic mock data
+        mock_analysis = {
+            'repository_info': {
+                'name': 'portfolio-website',
+                'full_name': 'demo/portfolio-website',
+                'description': 'A beautiful, responsive portfolio website built with React and modern web technologies.',
+                'url': demo_url,
+                'clone_url': 'https://github.com/demo/portfolio-website.git',
+                'homepage': 'https://demo-portfolio.vercel.app',
+                'created_at': '2023-01-15T10:30:00Z',
+                'updated_at': '2025-01-01T12:00:00Z',
+                'stars': 342,
+                'forks': 67,
+                'language': 'JavaScript',
+                'size': 2456,
+                'open_issues': 3,
+                'license': 'MIT',
+                'topics': ['portfolio', 'react', 'typescript', 'tailwindcss', 'responsive']
+            },
+            'tech_stack': {
+                'primary_language': 'JavaScript',
+                'languages': ['JavaScript', 'TypeScript', 'CSS', 'HTML'],
+                'frameworks': ['React', 'Next.js', 'Tailwind CSS'],
+                'tools': ['Vite', 'ESLint', 'Prettier'],
+                'deployment': ['Vercel', 'GitHub Actions'],
+                'databases': [],
+                'confidence_score': 0.95
+            },
+            'readme_analysis': {
+                'title': 'Portfolio Website',
+                'description': 'A modern, responsive portfolio website showcasing projects and skills.',
+                'installation': 'npm install && npm run dev',
+                'usage': 'Visit the deployed site or run locally for development.',
+                'features': [
+                    'Responsive design that works on all devices',
+                    'Modern UI with smooth animations',
+                    'Dark mode support',
+                    'Fast loading and SEO optimized',
+                    'Easy to customize and extend'
+                ],
+                'tech_stack': ['React', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
+                'demo_url': 'https://demo-portfolio.vercel.app',
+                'screenshots': []
+            },
+            'project_analysis': {
+                'project_type': 'frontend_application',
+                'complexity_level': 'medium',
+                'project_category': 'portfolio',
+                'development_status': 'active',
+                'deployment_ready': True
+            },
+            'website_generation': {
+                'template_recommendation': 'modern_spa',
+                'color_scheme': 'tech_dark',
+                'layout_style': 'showcase_focused',
+                'sections_needed': ['hero', 'about', 'features', 'tech_stack', 'demo', 'links', 'footer']
+            },
+            'analysis_metadata': {
+                'analyzed_at': datetime.now().isoformat(),
+                'analyzer_version': '1.0.0',
+                'confidence_score': 0.95,
+                'data_sources': ['demo_data']
+            }
+        }
+        
+        # Generate website
+        website_result = website_generator.generate_website(mock_analysis)
+        
+        # Store in session cache
+        analysis_cache[session_id] = {
+            'url': demo_url,
+            'timestamp': datetime.now().isoformat(),
+            'analysis_result': mock_analysis,
+            'website_result': website_result,
+            'from_cache': False,
+            'is_demo': True
+        }
+        
+        return jsonify({
+            'session_id': session_id,
+            'status': 'success',
+            'from_cache': False,
+            'is_demo': True,
+            'analysis': {
+                'repository_info': mock_analysis.get('repository_info', {}),
+                'tech_stack': mock_analysis.get('tech_stack', {}),
+                'project_analysis': mock_analysis.get('project_analysis', {}),
+                'website_generation': mock_analysis.get('website_generation', {}),
+                'readme_analysis': mock_analysis.get('readme_analysis', {})
+            },
+            'website': {
+                'preview_url': f'/api/website-preview/{session_id}',
+                'template_type': website_result['metadata']['template_type'],
+                'color_scheme': website_result['metadata']['color_scheme'],
+                'generated_at': website_result['metadata']['generated_at']
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Demo analysis error: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Demo analysis failed: {str(e)}',
+            'error_type': 'demo_error'
+        }), 500
 def test_github_analysis():
     """Test endpoint for GitHub analysis with a known repository."""
     try:

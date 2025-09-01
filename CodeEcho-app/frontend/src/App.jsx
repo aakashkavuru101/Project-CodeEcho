@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert.jsx'
 import { Progress } from '@/components/ui/progress.jsx'
 import { 
   Globe, 
-  Download, 
   Loader2, 
   CheckCircle, 
   AlertCircle, 
@@ -16,8 +15,6 @@ import {
   Palette, 
   Settings, 
   Users, 
-  FileText,
-  Zap,
   Sparkles,
   BarChart3,
   History,
@@ -85,7 +82,7 @@ function AppContent() {
         }
       }, 800) // Slower progress for better UX
 
-      const response = await fetch(`${config.API_BASE_URL}/api/analyze-repository`, {
+      const response = await fetch(`${config.API_BASE_URL}/api/demo-repository`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,60 +122,33 @@ function AppContent() {
 
   const resetAnalysis = () => {
     setAnalysisResult(null)
-    setSessionId(null)
-    setError(null)
-    setProgress(0)
     setUrl('')
-    setCurrentView('analyze')
-  }
-
-  const handleGetStarted = () => {
-    setCurrentView('analyze')
-  }
-
-  // Show landing page first
-  if (currentView === 'landing') {
-    return <LandingPage onGetStarted={handleGetStarted} />
+    setError(null)
+    setSessionId(null)
+    setProgress(0)
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
-      <main className="container mx-auto px-4 py-6 md:py-8" role="main" id="main-content">
-        {/* Skip to content link for screen readers */}
-        <a 
-          href="#main-content" 
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-md"
-        >
-          Skip to main content
-        </a>
-        
-        {/* Enhanced Header */}
-        <div className="text-center mb-8 md:mb-12">
-          <div className="flex items-center justify-center mb-4">
-            <div className="relative">
-              <Globe className="h-10 w-10 md:h-12 md:w-12 text-blue-600 mr-3" aria-hidden="true" />
-              <Sparkles className="h-4 w-4 text-yellow-500 absolute -top-1 -right-1 animate-pulse" aria-hidden="true" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
-          </div>
-          <div className="max-w-3xl mx-auto space-y-2">
-            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300">
+      
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              {t('title')}
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               {t('subtitle')}
             </p>
-            <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
               {t('secureSubtitle')}
             </p>
           </div>
-          
-          {/* Navigation Tabs */}
-          <div className="mt-6">
-            <div className="flex justify-center">
-              <nav 
-                className="inline-flex rounded-lg border bg-white dark:bg-gray-800 dark:border-gray-700 p-1"
-                role="tablist" 
-                aria-label="Main navigation"
-              >
+
+          <div className="flex justify-center mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700">
+              <nav className="flex space-x-1" role="tablist" aria-label="Application tabs">
                 <Button
                   variant={currentView === 'analyze' ? 'default' : 'ghost'}
                   size="sm"
@@ -188,7 +158,7 @@ function AppContent() {
                   aria-selected={currentView === 'analyze'}
                   aria-controls="analyze-panel"
                 >
-                  <Zap className="h-4 w-4 mr-2" aria-hidden="true" />
+                  <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
                   {t('analyzeTab')}
                 </Button>
                 <Button
@@ -254,7 +224,7 @@ function AppContent() {
                 <Card className="border-2 border-blue-100 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center">
-                      <Zap className="h-5 w-5 mr-2 text-blue-600" aria-hidden="true" />
+                      <Sparkles className="h-5 w-5 mr-2 text-blue-600" aria-hidden="true" />
                       {t('websiteAnalysis')}
                     </CardTitle>
                     <CardDescription>
@@ -348,12 +318,8 @@ function AppContent() {
                             Deployment-ready static website
                           </div>
                           <div className="flex items-center text-blue-800 md:col-span-2">
-                            <FileText className="h-4 w-4 mr-2 text-blue-500" />
+                            <Sparkles className="h-4 w-4 mr-2 text-blue-500" />
                             Automatic content generation from README and project data
-                          </div>
-                          <div className="flex items-center text-blue-800 md:col-span-2">
-                            <Bot className="h-4 w-4 mr-2 text-purple-500" />
-                            Powered by 8 specialized AI models for maximum accuracy
                           </div>
                         </div>
                       </div>
@@ -379,6 +345,31 @@ function AppContent() {
                       </span>
                     )}
                   </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    onClick={openGeneratedWebsite}
+                    className="flex items-center gap-2 px-6 py-3"
+                    size="lg"
+                  >
+                    <Globe className="h-5 w-5" />
+                    {t('viewWebsite')}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setAnalysisResult(null)
+                      setUrl('')
+                      setError(null)
+                    }}
+                    className="flex items-center gap-2 px-6 py-3"
+                    size="lg"
+                  >
+                    <Sparkles className="h-5 w-5" />
+                    Generate Another
+                  </Button>
                 </div>
 
                 {/* Quick Stats */}
@@ -423,32 +414,7 @@ function AppContent() {
                   </Card>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button 
-                    onClick={openGeneratedWebsite}
-                    className="flex items-center gap-2 px-6 py-3"
-                    size="lg"
-                  >
-                    <Globe className="h-5 w-5" />
-                    {t('viewWebsite')}
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      setAnalysisResult(null)
-                      setUrl('')
-                      setError(null)
-                    }}
-                    className="flex items-center gap-2 px-6 py-3"
-                    size="lg"
-                  >
-                    <Sparkles className="h-5 w-5" />
-                    Generate Another
-                  </Button>
-                </div>
-
-                {/* Analysis Results */}
+                {/* Repository Details */}
                 <Card className="border-2 border-gray-100 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center">
@@ -456,356 +422,52 @@ function AppContent() {
                       {t('repositoryInfo')}
                     </CardTitle>
                     <CardDescription>
-                      Detailed analysis of the GitHub repository and generated website information
+                      Repository analysis and generated website information
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Tabs defaultValue="repository" className="w-full">
-                      <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="repository">Repository</TabsTrigger>
-                        <TabsTrigger value="techstack">{t('techStack')}</TabsTrigger>
-                        <TabsTrigger value="analysis">{t('projectAnalysis')}</TabsTrigger>
-                        <TabsTrigger value="website">{t('websitePreview')}</TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="repository" className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-semibold mb-2">Repository Information</h4>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Name:</span>
-                                <Badge variant="secondary">
-                                  {analysisResult.analysis.repository_info?.name || 'Unknown'}
-                                </Badge>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Language:</span>
-                                <span>{analysisResult.analysis.repository_info?.language || 'Multiple'}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Stars:</span>
-                                <span>{analysisResult.analysis.repository_info?.stars || 0}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Forks:</span>
-                                <span>{analysisResult.analysis.repository_info?.forks || 0}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">License:</span>
-                                <span>{analysisResult.analysis.repository_info?.license || 'Unknown'}</span>
-                              </div>
-                            </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="font-semibold mb-3">Repository Information</h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Name:</span>
+                            <Badge variant="secondary">
+                              {analysisResult.analysis.repository_info?.name || 'Unknown'}
+                            </Badge>
                           </div>
-                          <div>
-                            <h4 className="font-semibold mb-3">Description</h4>
-                            <p className="text-sm text-gray-600 mb-4">
-                              {analysisResult.analysis.repository_info?.description || 'No description available'}
-                            </p>
-                            
-                            {analysisResult.analysis.repository_info?.topics?.length > 0 && (
-                              <div>
-                                <h5 className="font-medium mb-2 text-sm">Topics</h5>
-                                <div className="flex flex-wrap gap-1">
-                                  {analysisResult.analysis.repository_info.topics.map((topic, index) => (
-                                    <Badge key={index} variant="outline" className="text-xs">
-                                      {topic}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {analysisResult.analysis.repository_info?.homepage && (
-                              <div className="mt-4">
-                                <h5 className="font-medium mb-2 text-sm">Homepage</h5>
-                                <a 
-                                  href={analysisResult.analysis.repository_info.homepage}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 underline text-sm"
-                                >
-                                  {analysisResult.analysis.repository_info.homepage}
-                                </a>
-                              </div>
-                            )}
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Language:</span>
+                            <span>{analysisResult.analysis.repository_info?.language || 'Multiple'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">License:</span>
+                            <span>{analysisResult.analysis.repository_info?.license || 'Unknown'}</span>
                           </div>
                         </div>
-                      </TabsContent>
-
-                      <TabsContent value="techstack" className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-semibold mb-2 flex items-center">
-                              <Code className="h-4 w-4 mr-2" />
-                              Programming Languages
-                            </h4>
-                            <div className="space-y-2">
-                              {analysisResult.analysis.tech_stack?.languages?.length > 0 ? (
-                                analysisResult.analysis.tech_stack.languages.map((lang, index) => (
-                                  <Badge key={index} variant="secondary" className="mr-2 mb-2">
-                                    {lang}
-                                  </Badge>
-                                ))
-                              ) : (
-                                <p className="text-sm text-gray-500">No languages detected</p>
-                              )}
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold mb-2">Frameworks & Tools</h4>
-                            <div className="space-y-2">
-                              {analysisResult.analysis.tech_stack?.frameworks?.length > 0 ? (
-                                analysisResult.analysis.tech_stack.frameworks.map((framework, index) => (
-                                  <Badge key={index} variant="outline" className="mr-2 mb-2">
-                                    {framework}
-                                  </Badge>
-                                ))
-                              ) : (
-                                <p className="text-sm text-gray-500">No frameworks detected</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-3">Description</h4>
+                        <p className="text-sm text-gray-600 mb-4">
+                          {analysisResult.analysis.repository_info?.description || 'No description available'}
+                        </p>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        {analysisResult.analysis.tech_stack?.frameworks?.length > 0 && (
                           <div>
-                            <h4 className="font-semibold mb-2">Deployment</h4>
-                            <div className="space-y-2">
-                              {analysisResult.analysis.tech_stack?.deployment?.length > 0 ? (
-                                analysisResult.analysis.tech_stack.deployment.map((deploy, index) => (
-                                  <Badge key={index} variant="outline" className="mr-2 mb-2">
-                                    {deploy}
-                                  </Badge>
-                                ))
-                              ) : (
-                                <p className="text-sm text-gray-500">No deployment tools detected</p>
-                              )}
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold mb-2">Databases</h4>
-                            <div className="space-y-2">
-                              {analysisResult.analysis.tech_stack?.databases?.length > 0 ? (
-                                analysisResult.analysis.tech_stack.databases.map((db, index) => (
-                                  <Badge key={index} variant="outline" className="mr-2 mb-2">
-                                    {db}
-                                  </Badge>
-                                ))
-                              ) : (
-                                <p className="text-sm text-gray-500">No databases detected</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="analysis" className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-semibold mb-2">Project Analysis</h4>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Type:</span>
-                                <Badge variant="secondary">
-                                  {t(`projectTypes.${analysisResult.analysis.project_analysis?.project_type}`) || 
-                                   analysisResult.analysis.project_analysis?.project_type?.replace('_', ' ') || 'General'}
-                                </Badge>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Complexity:</span>
-                                <Badge variant="outline">
-                                  {t(`complexityLevels.${analysisResult.analysis.project_analysis?.complexity_level}`) ||
-                                   analysisResult.analysis.project_analysis?.complexity_level || 'Medium'}
-                                </Badge>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Category:</span>
-                                <span>{analysisResult.analysis.project_analysis?.project_category || 'General'}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Status:</span>
-                                <Badge variant={analysisResult.analysis.project_analysis?.development_status === 'active' ? 'default' : 'secondary'}>
-                                  {analysisResult.analysis.project_analysis?.development_status || 'Unknown'}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold mb-2">Website Generation</h4>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Template:</span>
-                                <Badge variant="secondary">
-                                  {analysisResult.analysis.website_generation?.template_recommendation || 'Clean Minimal'}
-                                </Badge>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Color Scheme:</span>
-                                <span>{analysisResult.analysis.website_generation?.color_scheme || 'Modern Minimal'}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Layout Style:</span>
-                                <span>{analysisResult.analysis.website_generation?.layout_style || 'Balanced'}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Deployment Ready:</span>
-                                <Badge variant={analysisResult.analysis.project_analysis?.deployment_ready ? 'default' : 'secondary'}>
-                                  {analysisResult.analysis.project_analysis?.deployment_ready ? 'Yes' : 'No'}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="website" className="space-y-4">
-                        <div className="text-center">
-                          <h4 className="font-semibold mb-4">Generated Website Preview</h4>
-                          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8">
-                            <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-600 mb-4">
-                              Your website has been generated and is ready to view!
-                            </p>
-                            <Button 
-                              onClick={openGeneratedWebsite}
-                              className="flex items-center gap-2 mx-auto"
-                              size="lg"
-                            >
-                              <Globe className="h-5 w-5" />
-                              Open Website in New Tab
-                            </Button>
-                          </div>
-                          
-                          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div className="bg-blue-50 p-4 rounded-lg">
-                              <h5 className="font-medium text-blue-900 mb-2">Template Used</h5>
-                              <p className="text-blue-700">
-                                {analysisResult.website?.template_type || 'Clean Minimal'}
-                              </p>
-                            </div>
-                            <div className="bg-green-50 p-4 rounded-lg">
-                              <h5 className="font-medium text-green-900 mb-2">Color Scheme</h5>
-                              <p className="text-green-700">
-                                {analysisResult.website?.color_scheme || 'Modern Minimal'}
-                              </p>
-                            </div>
-                            <div className="bg-purple-50 p-4 rounded-lg">
-                              <h5 className="font-medium text-purple-900 mb-2">Generated At</h5>
-                              <p className="text-purple-700">
-                                {analysisResult.website?.generated_at ? 
-                                  new Date(analysisResult.website.generated_at).toLocaleString() : 
-                                  'Just now'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Items:</span>
-                                <span>{analysisResult.analysis.functionality_analysis.navigation_structure?.navigation_items || 0}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Search:</span>
-                                <Badge variant={analysisResult.analysis.functionality_analysis.navigation_structure?.has_search ? "default" : "secondary"}>
-                                  {analysisResult.analysis.functionality_analysis.navigation_structure?.has_search ? "Yes" : "No"}
-                                </Badge>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Pattern:</span>
-                                <span>{analysisResult.analysis.functionality_analysis.navigation_structure?.navigation_pattern || 'Unknown'}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="technical" className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-semibold mb-2">Technologies</h4>
+                            <h5 className="font-medium mb-2 text-sm">Technologies</h5>
                             <div className="flex flex-wrap gap-1">
-                              {analysisResult.analysis.technical_analysis.frontend_technologies?.map((tech, index) => (
-                                <Badge key={index} variant="outline">
+                              {analysisResult.analysis.tech_stack.frameworks.slice(0, 6).map((tech, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
                                   {tech}
                                 </Badge>
-                              )) || <span className="text-gray-500">None detected</span>}
+                              ))}
                             </div>
                           </div>
-                          <div>
-                            <h4 className="font-semibold mb-2">Modern Features</h4>
-                            <div className="flex flex-wrap gap-1">
-                              {analysisResult.analysis.technical_analysis.modern_features?.map((feature, index) => (
-                                <Badge key={index} variant="secondary">
-                                  {feature.replace('_', ' ')}
-                                </Badge>
-                              )) || <span className="text-gray-500">None detected</span>}
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="prompts" className="space-y-4">
-                        <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-6 rounded-lg border border-gray-200">
-                          <h4 className="font-semibold mb-3 flex items-center">
-                            <FileText className="h-5 w-5 mr-2 text-blue-600" />
-                            Generated Prompt Preview
-                          </h4>
-                          <div className="bg-white p-4 rounded-lg border text-sm font-mono max-h-64 overflow-y-auto shadow-inner">
-                            {analysisResult.prompts.text_preview}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <h5 className="font-semibold mb-2">Prompt Sections</h5>
-                            <div className="space-y-1">
-                              <div className="flex justify-between">
-                                <span>Design:</span>
-                                <span>{analysisResult.prompts.json_preview.requirements_summary?.design || 0} chars</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Functionality:</span>
-                                <span>{analysisResult.prompts.json_preview.requirements_summary?.functionality || 0} chars</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Technical:</span>
-                                <span>{analysisResult.prompts.json_preview.requirements_summary?.technical || 0} chars</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Content:</span>
-                                <span>{analysisResult.prompts.json_preview.requirements_summary?.content || 0} chars</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>UX:</span>
-                                <span>{analysisResult.prompts.json_preview.requirements_summary?.user_experience || 0} chars</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div>
-                            <h5 className="font-semibold mb-2">Output Formats</h5>
-                            <div className="space-y-2">
-                              <div className="flex items-center p-2 bg-blue-50 rounded">
-                                <FileText className="h-4 w-4 mr-2 text-blue-600" />
-                                <span>Human-readable text prompt</span>
-                              </div>
-                              <div className="flex items-center p-2 bg-green-50 rounded">
-                                <Code className="h-4 w-4 mr-2 text-green-600" />
-                                <span>Structured JSON format</span>
-                              </div>
-                              <div className="flex items-center p-2 bg-purple-50 rounded">
-                                <Settings className="h-4 w-4 mr-2 text-purple-600" />
-                                <span>Complete analysis data</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-                    </Tabs>
+                        )}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-
-                {/* These actions were already added in the earlier success section, so remove this duplicate */}
               </div>
             )}
           </div>
@@ -829,4 +491,3 @@ function App() {
 }
 
 export default App
-

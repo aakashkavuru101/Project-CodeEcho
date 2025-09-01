@@ -44,10 +44,16 @@ function AppContent() {
   const [progress, setProgress] = useState(0)
   const [currentView, setCurrentView] = useState('landing') // 'landing', 'analyze', 'dashboard', 'history'
 
-  const analyzeWebsite = async (websiteUrl = null) => {
-    const targetUrl = websiteUrl || url;
+  const analyzeRepository = async (repositoryUrl = null) => {
+    const targetUrl = repositoryUrl || url;
     if (!targetUrl.trim()) {
       setError(t('errorUrlRequired'))
+      return
+    }
+
+    // Validate GitHub URL
+    if (!targetUrl.toLowerCase().includes('github.com')) {
+      setError(t('errorInvalidRepo'))
       return
     }
 
@@ -57,18 +63,29 @@ function AppContent() {
     setCurrentView('analyze')
     
     try {
-      // Simulate progress updates
+      // GitHub-specific progress simulation with realistic steps
+      const progressSteps = [
+        { progress: 15, message: t('githubConnecting') },
+        { progress: 25, message: t('githubFetching') },
+        { progress: 45, message: t('githubAnalyzing') },
+        { progress: 60, message: t('githubReadme') },
+        { progress: 75, message: t('websiteBuilding') },
+        { progress: 85, message: t('websitePopulating') },
+        { progress: 95, message: t('websiteDeploying') },
+        { progress: 100, message: t('websiteFinalizing') }
+      ]
+      
+      let stepIndex = 0
       const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval)
-            return 90
-          }
-          return prev + 10
-        })
-      }, 500)
+        if (stepIndex < progressSteps.length) {
+          setProgress(progressSteps[stepIndex].progress)
+          stepIndex++
+        } else {
+          clearInterval(progressInterval)
+        }
+      }, 800) // Slower progress for better UX
 
-      const response = await fetch(`${config.API_BASE_URL}/api/analyze-website`, {
+      const response = await fetch(`${config.API_BASE_URL}/api/analyze-repository`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,40 +101,26 @@ function AppContent() {
       if (data.status === 'success') {
         setAnalysisResult(data)
         setSessionId(data.session_id)
+        setTimeout(() => {
+          setIsAnalyzing(false)
+          setProgress(0)
+        }, 1000) // Brief delay to show completion
       } else {
-        setError(data.message || t('errorAnalysisFailed'))
+        throw new Error(data.message || t('errorAnalysisFailed'))
       }
-    } catch (err) {
-      setError(t('errorConnection'))
-      console.error('Analysis error:', err)
-    } finally {
+    } catch (error) {
+      console.error('Repository analysis error:', error)
+      setError(error.message || t('errorConnection'))
       setIsAnalyzing(false)
+      setProgress(0)
     }
   }
 
-  const downloadResults = async () => {
+  const openGeneratedWebsite = () => {
     if (!sessionId) return
     
-    try {
-      const response = await fetch(`${config.API_BASE_URL}/api/download/${sessionId}`)
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.style.display = 'none'
-        a.href = url
-        a.download = `website_analysis_${sessionId.slice(0, 8)}.zip`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-      } else {
-        setError('Failed to download results')
-      }
-    } catch (err) {
-      setError('Download failed')
-      console.error('Download error:', err)
-    }
+    const websiteUrl = `${config.API_BASE_URL}/api/website-preview/${sessionId}`
+    window.open(websiteUrl, '_blank')
   }
 
   const resetAnalysis = () => {
@@ -239,7 +242,7 @@ function AppContent() {
             <AnalysisHistory onAnalyzeUrl={(url) => {
               setUrl(url);
               setCurrentView('analyze');
-              analyzeWebsite(url);
+              analyzeRepository(url);
             }} />
           </div>
         )}
@@ -259,7 +262,7 @@ function AppContent() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <form onSubmit={(e) => { e.preventDefault(); analyzeWebsite(); }} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <form onSubmit={(e) => { e.preventDefault(); analyzeRepository(); }} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                       <Input
                         type="url"
                         placeholder={t('urlPlaceholder')}
@@ -267,7 +270,7 @@ function AppContent() {
                         onChange={(e) => setUrl(e.target.value)}
                         disabled={isAnalyzing}
                         className="flex-1 text-base"
-                        aria-label="Website URL to analyze"
+                        aria-label="GitHub repository URL to analyze"
                         aria-describedby="url-help"
                         required
                       />
@@ -292,7 +295,7 @@ function AppContent() {
                       </Button>
                     </form>
                     <div id="url-help" className="sr-only">
-                      Enter a complete website URL including http:// or https://
+                      Enter a complete GitHub repository URL including https://github.com/
                     </div>
 
                     {isAnalyzing && (
@@ -303,10 +306,14 @@ function AppContent() {
                         </div>
                         <Progress value={progress} className="w-full h-3" aria-label={`Analysis progress: ${progress}%`} />
                         <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                          {progress < 30 ? '🔍 Scraping website content...' :
-                           progress < 60 ? '🎨 Analyzing design and functionality...' :
-                           progress < 90 ? '🤖 Generating AI prompts with Ollama...' :
-                           '✨ Finalizing results...'}
+                          {progress < 20 ? '🔗 Connecting to GitHub API...' :
+                           progress < 30 ? '📦 Fetching repository data...' :
+                           progress < 50 ? '🔍 Analyzing code and identifying framework...' :
+                           progress < 65 ? '📖 Parsing README.md for project description...' :
+                           progress < 80 ? '🏗️ Building project website from template...' :
+                           progress < 90 ? '📝 Populating content: project name, description, and tech stack...' :
+                           progress < 100 ? '🚀 Preparing deployment-ready website...' :
+                           '✨ Finalizing... Almost there!'}
                         </p>
                       </div>
                     )}
@@ -325,24 +332,24 @@ function AppContent() {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                           <div className="flex items-center text-blue-800">
-                            <Palette className="h-4 w-4 mr-2 text-purple-500" />
-                            Advanced design analysis (colors, typography, layouts)
+                            <Code className="h-4 w-4 mr-2 text-purple-500" />
+                            Complete repository analysis with tech stack detection
                           </div>
                           <div className="flex items-center text-blue-800">
-                            <Settings className="h-4 w-4 mr-2 text-green-500" />
-                            Comprehensive functionality breakdown & user flows
+                            <Palette className="h-4 w-4 mr-2 text-green-500" />
+                            Beautiful, responsive portfolio website
                           </div>
                           <div className="flex items-center text-blue-800">
-                            <Code className="h-4 w-4 mr-2 text-orange-500" />
-                            Deep technical architecture recommendations
+                            <Settings className="h-4 w-4 mr-2 text-orange-500" />
+                            Professional templates tailored to your project
                           </div>
                           <div className="flex items-center text-blue-800">
                             <Users className="h-4 w-4 mr-2 text-rose-500" />
-                            Enhanced content strategy & UX guidelines
+                            Deployment-ready static website
                           </div>
                           <div className="flex items-center text-blue-800 md:col-span-2">
                             <FileText className="h-4 w-4 mr-2 text-blue-500" />
-                            Multi-format AI prompts (text, JSON, markdown)
+                            Automatic content generation from README and project data
                           </div>
                           <div className="flex items-center text-blue-800 md:col-span-2">
                             <Bot className="h-4 w-4 mr-2 text-purple-500" />
@@ -363,9 +370,14 @@ function AppContent() {
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
                     <CheckCircle className="h-8 w-8 text-green-600" />
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Analysis Complete!</h2>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{t('analysisComplete')}</h2>
                   <p className="text-gray-600">
-                    Successfully analyzed <span className="font-semibold text-blue-600">{analysisResult.analysis.website_info.url}</span>
+                    Successfully generated website for <span className="font-semibold text-blue-600">{analysisResult.analysis.repository_info?.name || 'repository'}</span>
+                    {analysisResult.from_cache && (
+                      <span className="ml-2 inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                        ⚡ {t('successCached')}
+                      </span>
+                    )}
                   </p>
                 </div>
 
@@ -373,40 +385,67 @@ function AppContent() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card className="text-center hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
-                      <Globe className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Website Type</p>
-                      <p className="font-semibold capitalize">
-                        {analysisResult.analysis.summary.website_type.replace('_', ' ')}
+                      <Code className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">Primary Language</p>
+                      <p className="font-semibold">
+                        {analysisResult.analysis.repository_info?.language || 'Multiple'}
                       </p>
                     </CardContent>
                   </Card>
                   <Card className="text-center hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
                       <Users className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Primary Purpose</p>
+                      <p className="text-sm text-gray-600">Project Type</p>
                       <p className="font-semibold capitalize">
-                        {analysisResult.analysis.summary.primary_purpose.replace('_', ' ')}
+                        {t(`projectTypes.${analysisResult.analysis.project_analysis?.project_type}`) || 
+                         analysisResult.analysis.project_analysis?.project_type?.replace('_', ' ') || 'General'}
                       </p>
                     </CardContent>
                   </Card>
                   <Card className="text-center hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
                       <Settings className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Core Features</p>
+                      <p className="text-sm text-gray-600">Complexity</p>
                       <p className="font-semibold">
-                        {analysisResult.analysis.summary.core_features.length} identified
+                        {t(`complexityLevels.${analysisResult.analysis.project_analysis?.complexity_level}`) ||
+                         analysisResult.analysis.project_analysis?.complexity_level || 'Medium'}
                       </p>
                     </CardContent>
                   </Card>
                   <Card className="text-center hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
-                      <Code className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Business Type</p>
-                      <p className="font-semibold capitalize">
-                        {analysisResult.analysis.summary.business_type.replace('_', ' ')}
+                      <Globe className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">Stars</p>
+                      <p className="font-semibold">
+                        {analysisResult.analysis.repository_info?.stars || 0}
                       </p>
                     </CardContent>
                   </Card>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    onClick={openGeneratedWebsite}
+                    className="flex items-center gap-2 px-6 py-3"
+                    size="lg"
+                  >
+                    <Globe className="h-5 w-5" />
+                    {t('viewWebsite')}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setAnalysisResult(null)
+                      setUrl('')
+                      setError(null)
+                    }}
+                    className="flex items-center gap-2 px-6 py-3"
+                    size="lg"
+                  >
+                    <Sparkles className="h-5 w-5" />
+                    Generate Another
+                  </Button>
                 </div>
 
                 {/* Analysis Results */}
@@ -414,152 +453,254 @@ function AppContent() {
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
-                      Analysis Results
+                      {t('repositoryInfo')}
                     </CardTitle>
                     <CardDescription>
-                      Detailed breakdown of the website's design, functionality, and technical implementation
+                      Detailed analysis of the GitHub repository and generated website information
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Tabs defaultValue="overview" className="w-full">
-                      <TabsList className="grid w-full grid-cols-5">
-                        <TabsTrigger value="overview">Overview</TabsTrigger>
-                        <TabsTrigger value="design">Design</TabsTrigger>
-                        <TabsTrigger value="functionality">Features</TabsTrigger>
-                        <TabsTrigger value="technical">Technical</TabsTrigger>
-                        <TabsTrigger value="prompts">Prompts</TabsTrigger>
+                    <Tabs defaultValue="repository" className="w-full">
+                      <TabsList className="grid w-full grid-cols-4">
+                        <TabsTrigger value="repository">Repository</TabsTrigger>
+                        <TabsTrigger value="techstack">{t('techStack')}</TabsTrigger>
+                        <TabsTrigger value="analysis">{t('projectAnalysis')}</TabsTrigger>
+                        <TabsTrigger value="website">{t('websitePreview')}</TabsTrigger>
                       </TabsList>
 
-                      <TabsContent value="overview" className="space-y-4">
+                      <TabsContent value="repository" className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <h4 className="font-semibold mb-2">Website Information</h4>
+                            <h4 className="font-semibold mb-2">Repository Information</h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Name:</span>
+                                <Badge variant="secondary">
+                                  {analysisResult.analysis.repository_info?.name || 'Unknown'}
+                                </Badge>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Language:</span>
+                                <span>{analysisResult.analysis.repository_info?.language || 'Multiple'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Stars:</span>
+                                <span>{analysisResult.analysis.repository_info?.stars || 0}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Forks:</span>
+                                <span>{analysisResult.analysis.repository_info?.forks || 0}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">License:</span>
+                                <span>{analysisResult.analysis.repository_info?.license || 'Unknown'}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-3">Description</h4>
+                            <p className="text-sm text-gray-600 mb-4">
+                              {analysisResult.analysis.repository_info?.description || 'No description available'}
+                            </p>
+                            
+                            {analysisResult.analysis.repository_info?.topics?.length > 0 && (
+                              <div>
+                                <h5 className="font-medium mb-2 text-sm">Topics</h5>
+                                <div className="flex flex-wrap gap-1">
+                                  {analysisResult.analysis.repository_info.topics.map((topic, index) => (
+                                    <Badge key={index} variant="outline" className="text-xs">
+                                      {topic}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {analysisResult.analysis.repository_info?.homepage && (
+                              <div className="mt-4">
+                                <h5 className="font-medium mb-2 text-sm">Homepage</h5>
+                                <a 
+                                  href={analysisResult.analysis.repository_info.homepage}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 underline text-sm"
+                                >
+                                  {analysisResult.analysis.repository_info.homepage}
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="techstack" className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold mb-2 flex items-center">
+                              <Code className="h-4 w-4 mr-2" />
+                              Programming Languages
+                            </h4>
+                            <div className="space-y-2">
+                              {analysisResult.analysis.tech_stack?.languages?.length > 0 ? (
+                                analysisResult.analysis.tech_stack.languages.map((lang, index) => (
+                                  <Badge key={index} variant="secondary" className="mr-2 mb-2">
+                                    {lang}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500">No languages detected</p>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-2">Frameworks & Tools</h4>
+                            <div className="space-y-2">
+                              {analysisResult.analysis.tech_stack?.frameworks?.length > 0 ? (
+                                analysisResult.analysis.tech_stack.frameworks.map((framework, index) => (
+                                  <Badge key={index} variant="outline" className="mr-2 mb-2">
+                                    {framework}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500">No frameworks detected</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                          <div>
+                            <h4 className="font-semibold mb-2">Deployment</h4>
+                            <div className="space-y-2">
+                              {analysisResult.analysis.tech_stack?.deployment?.length > 0 ? (
+                                analysisResult.analysis.tech_stack.deployment.map((deploy, index) => (
+                                  <Badge key={index} variant="outline" className="mr-2 mb-2">
+                                    {deploy}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500">No deployment tools detected</p>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-2">Databases</h4>
+                            <div className="space-y-2">
+                              {analysisResult.analysis.tech_stack?.databases?.length > 0 ? (
+                                analysisResult.analysis.tech_stack.databases.map((db, index) => (
+                                  <Badge key={index} variant="outline" className="mr-2 mb-2">
+                                    {db}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500">No databases detected</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="analysis" className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold mb-2">Project Analysis</h4>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Type:</span>
                                 <Badge variant="secondary">
-                                  {analysisResult.analysis.website_info.website_type}
+                                  {t(`projectTypes.${analysisResult.analysis.project_analysis?.project_type}`) || 
+                                   analysisResult.analysis.project_analysis?.project_type?.replace('_', ' ') || 'General'}
                                 </Badge>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Purpose:</span>
-                                <span>{analysisResult.analysis.website_info.primary_purpose}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Industry:</span>
-                                <span>{analysisResult.analysis.website_info.industry_category}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold mb-3">Core Features Detected</h4>
-                            <div className="space-y-2">
-                              {analysisResult.analysis.summary.core_features.map((feature, index) => (
-                                <div key={index} className="flex items-center p-2 bg-blue-50 dark:bg-blue-950 rounded-md">
-                                  <CheckCircle className="h-4 w-4 mr-2 text-blue-600" />
-                                  <span className="text-sm font-medium capitalize">
-                                    {feature.replace(/_/g, ' ')}
-                                  </span>
-                                </div>
-                              ))}
-                              {analysisResult.analysis.summary.core_features.length === 0 && (
-                                <p className="text-sm text-muted-foreground italic">No specific features detected</p>
-                              )}
-                            </div>
-                            
-                            {/* Additional Feature Details */}
-                            <div className="mt-4">
-                              <h5 className="font-medium mb-2 text-sm">Implementation Insights</h5>
-                              <div className="space-y-1 text-xs">
-                                <div className="flex justify-between">
-                                  <span>Interactive Elements:</span>
-                                  <Badge variant="outline">
-                                    {analysisResult.analysis.functionality_analysis.user_interactions?.interaction_complexity || 'Medium'}
-                                  </Badge>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Navigation Complexity:</span>
-                                  <Badge variant="outline">
-                                    {analysisResult.analysis.functionality_analysis.navigation_structure?.navigation_items > 5 ? 'Complex' : 'Simple'}
-                                  </Badge>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Content Type:</span>
-                                  <Badge variant="outline">
-                                    {analysisResult.analysis.website_info?.primary_purpose || 'Standard'}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="design" className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-semibold mb-2 flex items-center">
-                              <Palette className="h-4 w-4 mr-2" />
-                              Color Palette
-                            </h4>
-                            <div className="space-y-2 text-sm">
-                              <div>
-                                <span className="text-gray-600">Scheme: </span>
-                                <Badge variant="secondary">
-                                  {analysisResult.analysis.design_analysis.color_palette?.color_scheme || 'Unknown'}
-                                </Badge>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">Mood: </span>
-                                <span>{analysisResult.analysis.design_analysis.color_palette?.mood || 'Unknown'}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold mb-2">Typography</h4>
-                            <div className="space-y-2 text-sm">
-                              <div>
-                                <span className="text-gray-600">Type: </span>
-                                <Badge variant="outline">
-                                  {analysisResult.analysis.design_analysis.typography?.font_type || 'Unknown'}
-                                </Badge>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">Strategy: </span>
-                                <span>{analysisResult.analysis.design_analysis.typography?.typography_strategy || 'Unknown'}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="functionality" className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-semibold mb-2">User Interactions</h4>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Buttons:</span>
-                                <span>{analysisResult.analysis.functionality_analysis.user_interactions?.button_count || 0}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Links:</span>
-                                <span>{analysisResult.analysis.functionality_analysis.user_interactions?.link_count || 0}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Inputs:</span>
-                                <span>{analysisResult.analysis.functionality_analysis.user_interactions?.input_count || 0}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Complexity:</span>
                                 <Badge variant="outline">
-                                  {analysisResult.analysis.functionality_analysis.user_interactions?.interaction_complexity || 'Unknown'}
+                                  {t(`complexityLevels.${analysisResult.analysis.project_analysis?.complexity_level}`) ||
+                                   analysisResult.analysis.project_analysis?.complexity_level || 'Medium'}
+                                </Badge>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Category:</span>
+                                <span>{analysisResult.analysis.project_analysis?.project_category || 'General'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Status:</span>
+                                <Badge variant={analysisResult.analysis.project_analysis?.development_status === 'active' ? 'default' : 'secondary'}>
+                                  {analysisResult.analysis.project_analysis?.development_status || 'Unknown'}
                                 </Badge>
                               </div>
                             </div>
                           </div>
                           <div>
-                            <h4 className="font-semibold mb-2">Navigation</h4>
+                            <h4 className="font-semibold mb-2">Website Generation</h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Template:</span>
+                                <Badge variant="secondary">
+                                  {analysisResult.analysis.website_generation?.template_recommendation || 'Clean Minimal'}
+                                </Badge>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Color Scheme:</span>
+                                <span>{analysisResult.analysis.website_generation?.color_scheme || 'Modern Minimal'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Layout Style:</span>
+                                <span>{analysisResult.analysis.website_generation?.layout_style || 'Balanced'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Deployment Ready:</span>
+                                <Badge variant={analysisResult.analysis.project_analysis?.deployment_ready ? 'default' : 'secondary'}>
+                                  {analysisResult.analysis.project_analysis?.deployment_ready ? 'Yes' : 'No'}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="website" className="space-y-4">
+                        <div className="text-center">
+                          <h4 className="font-semibold mb-4">Generated Website Preview</h4>
+                          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8">
+                            <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-600 mb-4">
+                              Your website has been generated and is ready to view!
+                            </p>
+                            <Button 
+                              onClick={openGeneratedWebsite}
+                              className="flex items-center gap-2 mx-auto"
+                              size="lg"
+                            >
+                              <Globe className="h-5 w-5" />
+                              Open Website in New Tab
+                            </Button>
+                          </div>
+                          
+                          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                              <h5 className="font-medium text-blue-900 mb-2">Template Used</h5>
+                              <p className="text-blue-700">
+                                {analysisResult.website?.template_type || 'Clean Minimal'}
+                              </p>
+                            </div>
+                            <div className="bg-green-50 p-4 rounded-lg">
+                              <h5 className="font-medium text-green-900 mb-2">Color Scheme</h5>
+                              <p className="text-green-700">
+                                {analysisResult.website?.color_scheme || 'Modern Minimal'}
+                              </p>
+                            </div>
+                            <div className="bg-purple-50 p-4 rounded-lg">
+                              <h5 className="font-medium text-purple-900 mb-2">Generated At</h5>
+                              <p className="text-purple-700">
+                                {analysisResult.website?.generated_at ? 
+                                  new Date(analysisResult.website.generated_at).toLocaleString() : 
+                                  'Just now'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Items:</span>
@@ -664,31 +805,15 @@ function AppContent() {
                   </CardContent>
                 </Card>
 
-                {/* Enhanced Action Buttons */}
-                <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
-                  <Button 
-                    onClick={downloadResults} 
-                    size="lg" 
-                    className="px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    aria-label="Download analysis results as ZIP file"
-                  >
-                    <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-                    Download Results
-                  </Button>
-                  <Button 
-                    onClick={resetAnalysis} 
-                    variant="outline" 
-                    size="lg" 
-                    className="px-8 border-2 hover:bg-gray-50 dark:hover:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    aria-label="Start a new website analysis"
-                  >
-                    <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
-                    Analyze Another Website
-                  </Button>
-                </div>
+                {/* These actions were already added in the earlier success section, so remove this duplicate */}
               </div>
             )}
           </div>
+        )}
+
+        {/* Landing Page */}
+        {currentView === 'landing' && (
+          <LandingPage onGetStarted={() => setCurrentView('analyze')} />
         )}
       </main>
     </div>
